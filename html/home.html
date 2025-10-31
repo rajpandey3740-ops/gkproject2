@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GK General Store - Your Neighborhood Store Online</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/media.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold">GK General Store</h1>
+                        <p class="text-sm opacity-80">Your Neighborhood Store Online</p>
+                    </div>
+                </div>
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" placeholder="Search products..." class="search-input" id="searchInput" onkeyup="handleSearch()">
+                    <button class="mic-btn" id="micBtn" onclick="toggleVoiceSearch()" title="Voice search">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="/login" class="bg-white text-purple-600 px-6 py-3 rounded-full font-semibold hover:bg-purple-50 transition-all shadow-lg" id="login-btn">
+                        <i class="fas fa-user mr-2"></i>
+                        Login
+                    </a>
+                    <button onclick="toggleCart()" class="relative bg-white text-purple-600 px-6 py-3 rounded-full font-semibold hover:bg-purple-50 transition-all shadow-lg">
+                        <i class="fas fa-shopping-cart mr-2"></i>
+                        Cart
+                        <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold">0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <!-- Categories -->
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Shop by Category</h2>
+                <div class="flex gap-3 overflow-x-auto pb-4" id="categories">
+                    <!-- Categories will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Products Section -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-3xl font-bold text-gray-800" id="category-title">All Products</h2>
+                    <p class="text-gray-600" id="product-count">Loading products...</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="products">
+                    <!-- Products will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Cart Modal (Mobile) -->
+    <div id="cart-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
+        <div class="bg-white w-full max-h-[80vh] rounded-t-3xl overflow-hidden flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-gray-800">Your Cart</h2>
+                <button onclick="toggleCart()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6" id="cart-items-mobile">
+                <!-- Cart items will be loaded here -->
+            </div>
+            <div class="border-t p-6 bg-gray-50">
+                <div class="space-y-2 mb-4">
+                    <div class="flex justify-between text-gray-600">
+                        <span>Subtotal:</span>
+                        <span id="subtotal-mobile">₹0</span>
+                    </div>
+                    <div class="flex justify-between text-green-600 font-semibold">
+                        <span>Savings:</span>
+                        <span id="savings-mobile">₹0</span>
+                    </div>
+                    <div class="flex justify-between text-xl font-bold text-gray-900">
+                        <span>Total:</span>
+                        <span id="total-mobile">₹0</span>
+                    </div>
+                </div>
+                <button onclick="checkout()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all shadow-lg">
+                    Proceed to Checkout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkout-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
+        <div class="min-h-screen px-4 flex items-center justify-center">
+            <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                <div class="p-6 border-b flex justify-between items-center bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                    <h2 class="text-2xl font-bold">Checkout</h2>
+                    <button onclick="closeCheckout()" class="text-white hover:text-gray-200">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Left: Order Summary -->
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">Order Summary</h3>
+                            <div class="space-y-3" id="checkout-items">
+                                <!-- Order items will be loaded here -->
+                            </div>
+                        </div>
+                        <!-- Right: Delivery & Payment -->
+                        <div class="space-y-6">
+                            <!-- Delivery Address -->
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-3">Delivery Address</h3>
+                                <div class="bg-gray-50 rounded-xl p-4 mb-3" id="selected-address">
+                                    <p class="text-gray-500 text-sm">No address selected</p>
+                                </div>
+                                <button onclick="selectDeliveryAddress()" class="text-purple-600 font-semibold hover:text-purple-700">
+                                    <i class="fas fa-map-marker-alt mr-2"></i>Select Address
+                                </button>
+                            </div>
+                            <!-- Payment Method -->
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-3">Payment Method</h3>
+                                <div class="space-y-3">
+                                    <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-purple-500 cursor-pointer">
+                                        <input type="radio" name="payment" value="cod" checked onchange="selectPaymentMethod('cod')" class="w-5 h-5 text-purple-600">
+                                        <div class="ml-3">
+                                            <p class="font-semibold text-gray-800">Cash on Delivery</p>
+                                            <p class="text-sm text-gray-500">Pay when you receive</p>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-purple-500 cursor-pointer">
+                                        <input type="radio" name="payment" value="upi" onchange="selectPaymentMethod('upi')" class="w-5 h-5 text-purple-600">
+                                        <div class="ml-3">
+                                            <p class="font-semibold text-gray-800">UPI Payment</p>
+                                            <p class="text-sm text-gray-500">Pay via UPI</p>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div id="upi-details" class="hidden mt-4 p-4 bg-purple-50 rounded-xl">
+                                    <p class="font-semibold text-gray-800 mb-2">UPI ID:</p>
+                                    <div class="flex items-center justify-between bg-white p-3 rounded-lg">
+                                        <span id="upi-id-display" class="font-mono text-purple-600">7974908914@ptaxis</span>
+                                        <button onclick="copyUPIId()" class="text-purple-600 hover:text-purple-700">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Footer: Total & Place Order -->
+                <div class="border-t p-6 bg-gray-50">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <p class="text-sm text-gray-600">Subtotal: <span id="checkout-subtotal">₹0</span></p>
+                            <p class="text-sm text-green-600 font-semibold">Savings: <span id="checkout-savings">₹0</span></p>
+                            <p class="text-2xl font-bold text-gray-900">Total: <span id="checkout-total">₹0</span></p>
+                        </div>
+                        <button onclick="placeOrder()" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all shadow-lg">
+                            Place Order
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Address Selection Modal -->
+    <div id="address-select-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
+        <div class="min-h-screen px-4 flex items-center justify-center">
+            <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+                <div class="p-6 border-b flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-gray-800">Select Delivery Address</h2>
+                    <button onclick="closeAddressSelect()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-6">
+                    <div class="space-y-3" id="address-selection-list">
+                        <!-- Addresses will be loaded here -->
+                    </div>
+                </div>
+                <div class="border-t p-6">
+                    <button onclick="addNewAddressFromCheckout()" class="w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition-all">
+                        <i class="fas fa-plus mr-2"></i>Add New Address
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Address Form Modal -->
+    <div id="address-form-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
+        <div class="min-h-screen px-4 flex items-center justify-center">
+            <div class="bg-white rounded-2xl max-w-xl w-full">
+                <div class="p-6 border-b">
+                    <h2 class="text-2xl font-bold text-gray-800" id="address-form-title">Add New Address</h2>
+                </div>
+                <form onsubmit="saveAddress(event)" class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Address Type</label>
+                        <select id="address-type" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <option value="home">Home</option>
+                            <option value="work">Work</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
+                            <input type="text" id="address-name" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
+                            <input type="tel" id="address-phone" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Street Address</label>
+                        <input type="text" id="address-street" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">City</label>
+                            <input type="text" id="address-city" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">PIN Code</label>
+                            <input type="text" id="address-pin" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">State</label>
+                            <input type="text" id="address-state" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    <label class="flex items-center">
+                        <input type="checkbox" id="address-default" class="w-5 h-5 text-purple-600 rounded">
+                        <span class="ml-2 text-gray-700">Set as default address</span>
+                    </label>
+                    <div class="flex gap-3 pt-4">
+                        <button type="button" onclick="closeAddressForm()" class="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all">
+                            Cancel
+                        </button>
+                        <button type="submit" class="flex-1 px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-all">
+                            Save Address
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Addresses Management Modal -->
+    <div id="addresses-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
+        <div class="min-h-screen px-4 flex items-center justify-center">
+            <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+                <div class="p-6 border-b flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-gray-800">My Addresses</h2>
+                    <button onclick="closeAddresses()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="addresses-list">
+                        <!-- Addresses will be loaded here -->
+                    </div>
+                </div>
+                <div class="border-t p-6">
+                    <button onclick="showAddAddressForm()" class="w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition-all">
+                        <i class="fas fa-plus mr-2"></i>Add New Address
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

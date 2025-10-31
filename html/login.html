@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - GK General Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .login-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            border-color: #667eea;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+    <div class="login-card rounded-3xl shadow-2xl max-w-md w-full p-8 fade-in-up">
+        <!-- Logo/Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full mb-4">
+                <i class="fas fa-store text-white text-3xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Welcome Back!</h1>
+            <p class="text-gray-600">Login to GK General Store</p>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-6">
+            <!-- Email/Phone -->
+            <div>
+                <label for="username" class="block text-sm font-semibold text-gray-700 mb-2">
+                    <i class="fas fa-user mr-2 text-purple-600"></i>Email or Phone
+                </label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    name="username" 
+                    required 
+                    class="input-field w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none"
+                    placeholder="Enter your email or phone"
+                >
+            </div>
+
+            <!-- Password -->
+            <div>
+                <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
+                    <i class="fas fa-lock mr-2 text-purple-600"></i>Password
+                </label>
+                <div class="relative">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        required 
+                        class="input-field w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none pr-12"
+                        placeholder="Enter your password"
+                    >
+                    <button 
+                        type="button" 
+                        onclick="togglePassword()" 
+                        class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                        <i class="fas fa-eye" id="toggleIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Remember Me & Forgot Password -->
+            <div class="flex items-center justify-between">
+                <label class="flex items-center">
+                    <input type="checkbox" id="remember" class="w-5 h-5 text-purple-600 rounded">
+                    <span class="ml-2 text-sm text-gray-700">Remember me</span>
+                </label>
+                <a href="#" onclick="showForgotPassword()" class="text-sm text-purple-600 hover:text-purple-700 font-semibold">
+                    Forgot Password?
+                </a>
+            </div>
+
+            <!-- Login Button -->
+            <button 
+                type="submit" 
+                class="btn-primary w-full py-4 text-white font-bold text-lg rounded-xl shadow-lg"
+            >
+                Login
+            </button>
+
+            <!-- Divider -->
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-4 bg-white text-gray-500">Or continue with</span>
+                </div>
+            </div>
+
+            <!-- Social Login -->
+            <div class="grid grid-cols-2 gap-4">
+                <button 
+                    type="button" 
+                    onclick="loginWithGoogle()" 
+                    class="flex items-center justify-center px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-purple-500 transition-all"
+                >
+                    <i class="fab fa-google text-red-500 mr-2"></i>
+                    <span class="font-semibold text-gray-700">Google</span>
+                </button>
+                <button 
+                    type="button" 
+                    onclick="loginWithFacebook()" 
+                    class="flex items-center justify-center px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-purple-500 transition-all"
+                >
+                    <i class="fab fa-facebook text-blue-600 mr-2"></i>
+                    <span class="font-semibold text-gray-700">Facebook</span>
+                </button>
+            </div>
+        </form>
+
+        <!-- Sign Up Link -->
+        <div class="text-center mt-6">
+            <p class="text-gray-600">
+                Don't have an account? 
+                <a href="#" onclick="showSignup()" class="text-purple-600 hover:text-purple-700 font-semibold">
+                    Sign Up
+                </a>
+            </p>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="text-center mt-4">
+            <a href="/" class="text-sm text-gray-500 hover:text-gray-700">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Home
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Toggle password visibility
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+
+        // Handle login form submission
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
+
+            // For demo purposes - in production, this would call an API
+            console.log('Login attempt:', { username, password, remember });
+
+            // Simulate successful login
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('username', username);
+            
+            if (remember) {
+                localStorage.setItem('rememberMe', 'true');
+            }
+
+            // Show success message
+            showNotification('Login successful! Redirecting...', 'success');
+
+            // Redirect to home page after 1 second
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1000);
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-xl shadow-lg text-white ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 
+                'bg-blue-500'
+            }`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} mr-3"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Forgot password
+        function showForgotPassword() {
+            showNotification('Password reset link will be sent to your email', 'info');
+        }
+
+        // Sign up redirect
+        function showSignup() {
+            showNotification('Sign up page coming soon!', 'info');
+        }
+
+        // Social login handlers
+        function loginWithGoogle() {
+            showNotification('Google login will be implemented soon', 'info');
+        }
+
+        function loginWithFacebook() {
+            showNotification('Facebook login will be implemented soon', 'info');
+        }
+
+        // Check if user is already logged in
+        window.addEventListener('load', () => {
+            if (localStorage.getItem('isLoggedIn') === 'true') {
+                const username = localStorage.getItem('username');
+                showNotification(`Already logged in as ${username}`, 'info');
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1500);
+            }
+        });
+    </script>
+</body>
+</html>

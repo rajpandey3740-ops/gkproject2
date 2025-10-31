@@ -1,0 +1,16 @@
+{
+  "name": "gk-general-store",
+  "version": "1.0.0",
+  "description": "A modern e-commerce web application for a neighborhood general store",
+  "main": "index.tsx",
+  "scripts": {
+    "dev": "bun run index.tsx",
+    "start": "bun run index.tsx"
+  },
+  "dependencies": {
+    "hono": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  }
+}
