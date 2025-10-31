@@ -15,7 +15,6 @@ const Home: React.FC = () => {
   const [showCheckout, setShowCheckout] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
-  const [isListening, setIsListening] = useState(false);
 
   useEffect(() => {
     // Load cart from localStorage

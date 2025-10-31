@@ -16,13 +16,11 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 }) => {
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [paymentMethod, setPaymentMethod] = useState('cod');
-  const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
 
   useEffect(() => {
     const addresses = localStorage.getItem('addresses');
     if (addresses) {
       const parsed = JSON.parse(addresses);
-      setSavedAddresses(parsed);
       const defaultAddr = parsed.find((addr: Address) => addr.isDefault) || parsed[0];
       if (defaultAddr) setSelectedAddress(defaultAddr);
     }
