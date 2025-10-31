@@ -1,29 +1,16 @@
 {
-  "framework": null,
-  "buildCommand": "npm run build",
-  "outputDirectory": ".",
   "rewrites": [
+    {
+      "source": "/",
+      "destination": "/html/home.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/html/login.html"
+    },
     {
       "source": "/api/:path*",
       "destination": "/api/index.ts"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/css/(.*)",
-      "dest": "/css/$1"
-    },
-    {
-      "src": "/js/(.*)",
-      "dest": "/js/$1"
-    },
-    {
-      "src": "/",
-      "dest": "/html/home.html"
-    },
-    {
-      "src": "/login",
-      "dest": "/html/login.html"
     }
   ]
 }
