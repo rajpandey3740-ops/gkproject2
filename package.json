@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "A modern e-commerce web application for a neighborhood general store",
   "type": "module",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
