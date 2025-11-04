@@ -9,7 +9,7 @@ dotenv.config();
 const app = createApp();
 
 // Connect to database
-connectDatabase().catch(err => {
+connectDatabase().catch(_err => {
   console.warn('⚠️  MongoDB connection failed - running in standalone mode with in-memory data');
   console.warn('   To use MongoDB, please ensure it is installed and running');
 });
