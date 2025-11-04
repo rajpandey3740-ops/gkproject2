@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 // GK General Store - Main Application JavaScript
 let cart = JSON.parse(localStorage.getItem('cart')) || []
 let currentCategory = 'all'

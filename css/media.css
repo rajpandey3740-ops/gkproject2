@@ -1,5 +1,17 @@
 /* Media Queries for Responsive Design */
 
+/* Ensure proper viewport scaling */
+@media (max-width: 1024px) {
+  html {
+    overflow-x: hidden;
+  }
+  
+  body {
+    overflow-x: hidden;
+    width: 100%;
+  }
+}
+
 /* Large Desktops */
 @media (min-width: 1200px) {
   .container {
@@ -89,5 +101,10 @@
   
   .welcome-title {
     font-size: 1.5rem;
+  }
+  
+  /* Ensure cart and buttons don't overflow */
+  .container {
+    padding: 0 12px;
   }
 }

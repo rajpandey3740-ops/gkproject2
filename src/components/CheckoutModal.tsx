@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { CartItem, Address } from '../types';
+
+const API_BASE_URL = 'http://localhost:3001/api';
 
 interface CheckoutModalProps {
   cart: CartItem[];
@@ -16,6 +19,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 }) => {
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   useEffect(() => {
     const addresses = localStorage.getItem('addresses');
@@ -32,14 +36,59 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const savings = subtotal - total;
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (!selectedAddress) {
       alert('Please select a delivery address');
       return;
     }
 
-    alert(`Order placed successfully! Payment method: ${paymentMethod === 'cod' ? 'Cash on Delivery' : 'UPI'}`);
-    onSuccess();
+    setIsPlacingOrder(true);
+
+    try {
+      // Get username from localStorage
+      const username = localStorage.getItem('username') || 'Guest';
+
+      // Prepare order data
+      const orderData = {
+        username,
+        items: cart.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          originalPrice: item.originalPrice,
+          quantity: item.quantity,
+          image: item.image,
+          unit: item.unit
+        })),
+        address: {
+          name: selectedAddress.name,
+          phone: selectedAddress.phone,
+          street: selectedAddress.street,
+          city: selectedAddress.city,
+          state: selectedAddress.state,
+          pin: selectedAddress.pin
+        },
+        paymentMethod,
+        subtotal,
+        savings,
+        total
+      };
+
+      // Send order to backend
+      const response = await axios.post(`${API_BASE_URL}/orders`, orderData);
+
+      if (response.data.success) {
+        alert(`Order placed successfully! Order ID: ${response.data.data.orderId}`);
+        onSuccess();
+      } else {
+        alert('Failed to place order. Please try again.');
+      }
+    } catch (error: any) {
+      console.error('Error placing order:', error);
+      alert('Failed to place order. Please try again.');
+    } finally {
+      setIsPlacingOrder(false);
+    }
   };
 
   return (
@@ -175,9 +224,17 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
               </div>
               <button
                 onClick={handlePlaceOrder}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all shadow-lg"
+                disabled={isPlacingOrder}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Place Order
+                {isPlacingOrder ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin mr-2"></i>
+                    Placing Order...
+                  </>
+                ) : (
+                  'Place Order'
+                )}
               </button>
             </div>
           </div>

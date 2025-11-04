@@ -235,7 +235,7 @@ app.get('/shop', (c) => {
   return c.redirect('/');
 });
 
-const port = 3000;
+const port = 3001;
 console.log(`🚀 Server running at http://localhost:${port}`);
 
 export default {
