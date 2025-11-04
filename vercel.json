@@ -25,8 +25,15 @@
   ],
   "functions": {
     "api/index.ts": {
-      "runtime": "@vercel/node@3.2.20"
+      "runtime": "@vercel/node@3.2.20",
+      "memory": 1024,
+      "maxDuration": 10
     }
   },
-  "nodeVersion": "20.x"
+  "nodeVersion": "20.x",
+  "build": {
+    "env": {
+      "NODE_VERSION": "20.18.0"
+    }
+  }
 }
