@@ -10,7 +10,7 @@ dotenv.config();
 const app = createApp();
 
 // Connect to database with fallback
-connectDatabase().catch(err => {
+connectDatabase().catch((err: any) => {
   logger.warn('⚠️  MongoDB connection failed - running in standalone mode with in-memory data');
   logger.warn('   To use MongoDB, please ensure it is installed and running');
   logger.warn('   Or configure MongoDB Atlas connection in .env file');

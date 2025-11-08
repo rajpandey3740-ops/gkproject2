@@ -158,6 +158,15 @@ export class ProductService {
    */
   async createProduct(productData: Partial<Product>): Promise<Product> {
     try {
+      // Calculate discount if both prices are provided
+      if (productData.originalPrice && productData.price) {
+        const originalPrice = parseFloat(productData.originalPrice as any);
+        const price = parseFloat(productData.price as any);
+        if (!isNaN(originalPrice) && !isNaN(price) && originalPrice >= price) {
+          productData.discount = originalPrice - price;
+        }
+      }
+
       // Use in-memory storage if MongoDB is not connected
       if (!this.isMongoConnected()) {
         // Generate ID if not provided
@@ -212,6 +221,15 @@ export class ProductService {
    */
   async updateProduct(id: number, productData: Partial<Product>): Promise<Product | null> {
     try {
+      // Calculate discount if both prices are provided
+      if (productData.originalPrice !== undefined && productData.price !== undefined) {
+        const originalPrice = parseFloat(productData.originalPrice as any);
+        const price = parseFloat(productData.price as any);
+        if (!isNaN(originalPrice) && !isNaN(price) && originalPrice >= price) {
+          productData.discount = originalPrice - price;
+        }
+      }
+
       // Use in-memory storage if MongoDB is not connected
       if (!this.isMongoConnected()) {
         const productIndex = inMemoryProducts.findIndex(p => p.id === id);
