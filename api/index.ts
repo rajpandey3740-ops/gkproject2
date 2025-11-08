@@ -9,16 +9,6 @@ dotenv.config();
 // Create the Express app instance
 const app = createApp();
 
-// Add a simple test endpoint
-app.get('/api/test', (req, res) => {
-  res.json({
-    success: true,
-    message: 'API is working',
-    timestamp: new Date().toISOString(),
-    env: process.env.NODE_ENV || 'unknown'
-  });
-});
-
 // Connect to database with fallback
 connectDatabase().catch((err: any) => {
   logger.warn('⚠️  MongoDB connection failed - running in standalone mode with in-memory data');

@@ -11,5 +11,5 @@
       "@api/*": ["./api/*"]
     }
   },
-  "include": ["vite.config.ts", "api"]
+  "include": ["vite.config.ts"]
 }

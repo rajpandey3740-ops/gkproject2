@@ -262,13 +262,11 @@ export class ProductService {
     try {
       // Use in-memory storage if MongoDB is not connected
       if (!this.isMongoConnected()) {
-        const initialLength = inMemoryProducts.length;
         const index = inMemoryProducts.findIndex(p => p.id === id);
-        if (index !== -1) {
-          inMemoryProducts.splice(index, 1);
-          return true;
-        }
-        return false;
+        if (index === -1) return false;
+        
+        inMemoryProducts.splice(index, 1);
+        return true;
       }
       
       const result = await ProductModel.deleteOne({ id });

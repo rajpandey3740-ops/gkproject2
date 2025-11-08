@@ -1,4 +1,4 @@
-import { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { products } from './data/productsData';
 import { categories } from './data/categoriesData';
 
@@ -16,8 +16,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     }
     
     // Parse the URL to determine which endpoint to handle
-    const url = req.url || '';
-    const path = req.query.path as string[] || [];
+    const path = (req.query.path as string[]) || [];
     
     // Handle different API endpoints
     if (path[0] === 'products') {
