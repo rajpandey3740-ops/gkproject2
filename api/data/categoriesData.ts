@@ -1,6 +1,5 @@
-import { Category } from '../models/Product';
-
-export const categories: Category[] = [
+// Category data for the store
+export const categories = [
   { id: 'grains', name: 'Grains & Rice', icon: '🍚' },
   { id: 'pulses', name: 'Pulses & Dals', icon: '🫘' },
   { id: 'snacks', name: 'Snacks', icon: '🍟' },

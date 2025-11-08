@@ -1,6 +1,5 @@
-import { Product } from '../models/Product';
-
-export const products: Product[] = [
+// Product data for the store
+export const products = [
   // All Products (63 products)
   { id: 1, name: 'Basmati Rice Premium', category: 'grains', price: 500, originalPrice: 600, discount: 100, image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80', description: 'Premium long grain basmati rice', unit: '5kg' },
   { id: 2, name: 'Sona Masoori Rice', category: 'grains', price: 100, originalPrice: 120, discount: 17, image: 'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?auto=format&fit=crop&w=400&q=80', description: 'Medium grain rice, perfect for daily meals', unit: '5kg' },

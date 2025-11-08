@@ -12,7 +12,8 @@ api/services/*
 api/middleware/*
 api/utils/*
 api/scripts/*
-api/data/*
-api/config/*
+api/config/app.ts
+api/config/database.ts
 !api/index.ts
 !api/vercel-handler.ts
+!api/data/*

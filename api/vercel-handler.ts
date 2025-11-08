@@ -1,6 +1,28 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+
+// Import data - these need to be included in deployment
 import { products } from './data/productsData';
 import { categories } from './data/categoriesData';
+
+// Type definitions
+interface Product {
+  id: number;
+  name: string;
+  category: string;
+  price: number;
+  originalPrice: number;
+  discount: number;
+  image: string;
+  description: string;
+  unit: string;
+  inStock?: boolean;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  icon: string;
+}
 
 export default function handler(req: VercelRequest, res: VercelResponse): void {
   try {
@@ -16,14 +38,19 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
     }
     
     // Parse the URL to determine which endpoint to handle
-    const path = (req.query.path as string[]) || [];
+    const url = req.url || '';
+    const urlPath = url.split('?')[0]; // Remove query string
+    const pathParts = urlPath.split('/').filter(p => p && p !== 'api');
+    
+    console.log('Request URL:', url);
+    console.log('Path parts:', pathParts);
     
     // Handle different API endpoints
-    if (path[0] === 'products') {
-      handleProducts(req, res, path);
-    } else if (path[0] === 'categories') {
-      handleCategories(req, res, path);
-    } else if (path[0] === 'health') {
+    if (pathParts[0] === 'products') {
+      handleProducts(req, res, pathParts);
+    } else if (pathParts[0] === 'categories') {
+      handleCategories(req, res, pathParts);
+    } else if (pathParts[0] === 'health') {
       res.status(200).json({
         success: true,
         message: 'Health check successful',
@@ -32,7 +59,8 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
     } else {
       res.status(404).json({
         success: false,
-        error: 'Endpoint not found'
+        error: 'Endpoint not found',
+        path: pathParts
       });
     }
   } catch (error) {
