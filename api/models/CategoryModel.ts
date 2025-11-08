@@ -22,7 +22,8 @@ const CategorySchema: Schema = new Schema(
     },
     icon: {
       type: String,
-      required: true,
+      required: false, // Make icon optional
+      default: '🛒',   // Set default icon
     },
   },
   {

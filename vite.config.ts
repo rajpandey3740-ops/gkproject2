@@ -7,9 +7,24 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
+      },
+    },
+  },
+  // Add base path for Vercel deployment
+  base: '/',
+  // Ensure proper asset handling
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          utils: ['axios'],
+        },
       },
     },
   },

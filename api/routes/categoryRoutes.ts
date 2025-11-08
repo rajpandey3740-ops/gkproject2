@@ -10,4 +10,7 @@ categoryRouter.get('/', (req, res) => categoryController.getCategories(req, res)
 // GET /api/categories/:id - Get single category
 categoryRouter.get('/:id', (req, res) => categoryController.getCategoryById(req, res));
 
+// POST /api/categories - Create a new category
+categoryRouter.post('/', (req, res) => categoryController.createCategory(req, res));
+
 export default categoryRouter;

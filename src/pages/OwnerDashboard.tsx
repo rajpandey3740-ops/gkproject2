@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Product, Order } from '../types';
+import { Product, Order, Category } from '../types';
 
 const OwnerDashboard = () => {
   const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -17,6 +19,21 @@ const OwnerDashboard = () => {
   const [mrpPrice, setMrpPrice] = useState('');
   const [sellingPrice, setSellingPrice] = useState('');
   const [showMenu, setShowMenu] = useState(false);
+  const [showAddProduct, setShowAddProduct] = useState(false);
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    category: '',
+    originalPrice: '',
+    price: '',
+    unit: 'pcs',
+    description: '',
+    image: ''
+  });
+  const [newCategory, setNewCategory] = useState({
+    name: '',
+    icon: '🛒'
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,14 +44,15 @@ const OwnerDashboard = () => {
       return;
     }
     loadData();
+    loadCategories();
   }, [navigate]);
 
   const loadData = async () => {
     try {
       setLoading(true);
       const [productsRes, ordersRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/products'),
-        axios.get('http://localhost:5000/api/orders')
+        axios.get('/api/products'),
+        axios.get('/api/orders')
       ]);
       setProducts(productsRes.data.data || []);
       setOrders(ordersRes.data.data || []);
@@ -42,6 +60,15 @@ const OwnerDashboard = () => {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const res = await axios.get('/api/categories');
+      setCategories(res.data.data || []);
+    } catch (error) {
+      console.error('Error loading categories:', error);
     }
   };
 
@@ -54,7 +81,7 @@ const OwnerDashboard = () => {
   const toggleStock = async (product: Product) => {
     try {
       const newStock = !product.inStock;
-      await axios.patch(`http://localhost:5000/api/products/${product.id}`, {
+      await axios.patch(`/api/products/${product.id}`, {
         inStock: newStock === undefined ? true : newStock
       });
       setProducts(products.map(p => 
@@ -79,7 +106,7 @@ const OwnerDashboard = () => {
         finalImageUrl = `${imageUrl}?auto=format&fit=crop&w=400&q=80`;
       }
 
-      await axios.patch(`http://localhost:5000/api/products/${product.id}`, {
+      await axios.patch(`/api/products/${product.id}`, {
         image: finalImageUrl
       });
       setProducts(products.map(p => 
@@ -142,11 +169,11 @@ const OwnerDashboard = () => {
       return;
     }
 
-    // Calculate discount automatically
+    // Calculate discount in rupees
     const discount = mrp - selling;
 
     try {
-      await axios.patch(`http://localhost:5000/api/products/${product.id}`, {
+      await axios.patch(`/api/products/${product.id}`, {
         originalPrice: mrp,
         price: selling,
         discount: discount
@@ -172,10 +199,11 @@ const OwnerDashboard = () => {
     
     switch(action) {
       case 'categories':
+        // For now, we'll just show an alert - in a real implementation, you might show a category management modal
         alert('Categories Management - Feature coming soon!');
         break;
       case 'add-category':
-        alert('Add New Category - Feature coming soon!');
+        setShowAddCategory(true);
         break;
       case 'sales':
         alert('Sales Report - Feature coming soon!');
@@ -199,7 +227,7 @@ const OwnerDashboard = () => {
 
   const updateOrderStatus = async (orderId: string, status: Order['status']) => {
     try {
-      await axios.patch(`http://localhost:5000/api/orders/${orderId}/status`, { status });
+      await axios.patch(`/api/orders/${orderId}/status`, { status });
       setOrders(orders.map(o => 
         o.orderId === orderId ? { ...o, status } : o
       ));
@@ -208,6 +236,82 @@ const OwnerDashboard = () => {
       alert('Failed to update order status');
     }
   };
+
+  const handleAddProduct = async () => {
+    try {
+      const productData = {
+        ...newProduct,
+        originalPrice: parseFloat(newProduct.originalPrice),
+        price: parseFloat(newProduct.price)
+      };
+
+      const response = await axios.post('/api/products', productData);
+      
+      if (response.data.success) {
+        alert('Product added successfully!');
+        setShowAddProduct(false);
+        setNewProduct({
+          name: '',
+          category: '',
+          originalPrice: '',
+          price: '',
+          unit: 'pcs',
+          description: '',
+          image: ''
+        });
+        loadData(); // Refresh product list
+      } else {
+        alert(`Failed to add product: ${response.data.error}`);
+      }
+    } catch (error: any) {
+      console.error('Error adding product:', error);
+      alert(`Failed to add product: ${error.response?.data?.error || error.message}`);
+    }
+  };
+
+  const handleAddCategory = async () => {
+    try {
+      // Validate category data
+      if (!newCategory.name) {
+        alert('Please enter a category name');
+        return;
+      }
+
+      // Generate category ID from name (slugify)
+      const categoryId = newCategory.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+      const categoryData = {
+        id: categoryId,
+        name: newCategory.name,
+        icon: newCategory.icon
+      };
+
+      const response = await axios.post('/api/categories', categoryData);
+      
+      if (response.data.success) {
+        alert('Category added successfully!');
+        // Reset form
+        setNewCategory({
+          name: '',
+          icon: '🛒'
+        });
+        setShowAddCategory(false);
+        loadCategories(); // Refresh categories list
+      } else {
+        alert(`Failed to add category: ${response.data.error}`);
+      }
+    } catch (error: any) {
+      console.error('Error adding category:', error);
+      alert(`Failed to add category: ${error.response?.data?.error || error.message}`);
+    }
+  };
+
+  const filteredProducts = selectedCategory === 'all' 
+    ? products 
+    : products.filter(p => p.category === selectedCategory);
 
   const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'confirmed' || o.status === 'processing');
   const completedOrders = orders.filter(o => o.status === 'delivered' || o.status === 'cancelled');
@@ -338,286 +442,569 @@ const OwnerDashboard = () => {
 
         {/* Products Tab */}
         {activeTab === 'products' && (
-          <div className="space-y-4">
-            {products.map((product) => (
-              <div key={product.id} className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-start space-x-4">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-24 h-24 object-cover rounded-lg"
-                  />
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-800">{product.name}</h3>
-                    <p className="text-sm text-gray-500">{product.category}</p>
-                    <p className="text-green-600 font-semibold mt-1">
-                      ₹{product.price} <span className="text-gray-400 line-through text-sm">₹{product.originalPrice}</span>
-                    </p>
-                    <p className="text-sm text-gray-600 mt-1">{product.description}</p>
-                  </div>
-                  <div className="flex flex-col space-y-2">
+          <div className="space-y-6">
+            {/* Category Filter and Add Product Button */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setSelectedCategory('all')}
+                  className={`px-4 py-2 rounded-full font-semibold transition ${
+                    selectedCategory === 'all'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  🛒 All Products
+                </button>
+                {categories
+                  .filter(cat => cat.id !== 'all')
+                  .map((category) => (
                     <button
-                      onClick={() => toggleStock(product)}
-                      className={`px-4 py-2 rounded-lg font-semibold transition ${
-                        product.inStock !== false
-                          ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                          : 'bg-red-100 text-red-700 hover:bg-red-200'
+                      key={category.id}
+                      onClick={() => setSelectedCategory(category.id)}
+                      className={`px-4 py-2 rounded-full font-semibold transition ${
+                        selectedCategory === category.id
+                          ? 'bg-green-600 text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                       }`}
                     >
-                      {product.inStock !== false ? 'In Stock' : 'Out of Stock'}
+                      {category.icon} {category.name}
                     </button>
-                    <button
-                      onClick={() => {
-                        setEditingPriceProduct(product);
-                        setShowPriceEdit(true);
-                        setMrpPrice(product.originalPrice.toString());
-                        setSellingPrice(product.price.toString());
-                      }}
-                      className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition"
-                    >
-                      Edit Price
-                    </button>
-                    <button
-                      onClick={() => {
-                        setEditingProduct(product);
-                        setShowImageInput(true);
-                        // Remove URL parameters for cleaner display
-                        const cleanUrl = product.image.split('?')[0];
-                        setImageUrl(cleanUrl);
-                      }}
-                      className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition"
-                    >
-                      Change Image
-                    </button>
+                  ))}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowAddCategory(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-semibold flex items-center"
+                >
+                  <i className="fas fa-folder-plus mr-2"></i>
+                  Add Category
+                </button>
+                <button
+                  onClick={() => setShowAddProduct(true)}
+                  className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition font-semibold flex items-center"
+                >
+                  <i className="fas fa-plus mr-2"></i>
+                  Add New Product
+                </button>
+              </div>
+            </div>
+
+            {/* Add Category Modal */}
+            {showAddCategory && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
+                <div className="min-h-screen px-4 flex items-center justify-center">
+                  <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col">
+                    <div className="p-6 border-b flex justify-between items-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+                      <h2 className="text-2xl font-bold">Add New Category</h2>
+                      <button 
+                        onClick={() => setShowAddCategory(false)}
+                        className="text-white hover:text-gray-200"
+                      >
+                        <i className="fas fa-times text-2xl"></i>
+                      </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-6">
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Category Name *
+                          </label>
+                          <input
+                            type="text"
+                            value={newCategory.name}
+                            onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="e.g., Electronics, Clothing"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Category ID will be automatically generated from the name</p>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Category Icon
+                          </label>
+                          <input
+                            type="text"
+                            value={newCategory.icon}
+                            onChange={(e) => setNewCategory({...newCategory, icon: e.target.value})}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="e.g., 🛒, 📱, 👕"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Emoji or icon to represent the category</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="border-t p-6 bg-gray-50">
+                      <div className="flex space-x-3">
+                        <button
+                          onClick={handleAddCategory}
+                          className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
+                        >
+                          <i className="fas fa-plus-circle mr-2"></i>
+                          Add Category
+                        </button>
+                        <button
+                          onClick={() => setShowAddCategory(false)}
+                          className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
+              </div>
+            )}
 
-                {/* Image Update Form */}
-                {showImageInput && editingProduct?.id === product.id && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-3">
-                        Choose Upload Method
-                      </label>
-                      <div className="flex space-x-4">
+            {/* Add Product Modal */}
+            {showAddProduct && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
+                <div className="min-h-screen px-4 flex items-center justify-center">
+                  <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                    <div className="p-6 border-b flex justify-between items-center bg-gradient-to-r from-green-600 to-emerald-600 text-white">
+                      <h2 className="text-2xl font-bold">Add New Product</h2>
+                      <button 
+                        onClick={() => setShowAddProduct(false)}
+                        className="text-white hover:text-gray-200"
+                      >
+                        <i className="fas fa-times text-2xl"></i>
+                      </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-6">
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Product Name *
+                          </label>
+                          <input
+                            type="text"
+                            value={newProduct.name}
+                            onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Enter product name"
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Category *
+                            </label>
+                            <select
+                              value={newProduct.category}
+                              onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            >
+                              <option value="">Select category</option>
+                              {categories
+                                .filter(cat => cat.id !== 'all')
+                                .map((category) => (
+                                  <option key={category.id} value={category.id}>
+                                    {category.icon} {category.name}
+                                  </option>
+                                ))}
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Unit
+                            </label>
+                            <input
+                              type="text"
+                              value={newProduct.unit}
+                              onChange={(e) => setNewProduct({...newProduct, unit: e.target.value})}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="e.g., kg, pcs, pack"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              MRP (₹) *
+                            </label>
+                            <input
+                              type="number"
+                              value={newProduct.originalPrice}
+                              onChange={(e) => setNewProduct({...newProduct, originalPrice: e.target.value})}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Enter MRP"
+                              min="0"
+                              step="0.01"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Selling Price (₹) *
+                            </label>
+                            <input
+                              type="number"
+                              value={newProduct.price}
+                              onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Enter selling price"
+                              min="0"
+                              step="0.01"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Description
+                          </label>
+                          <textarea
+                            value={newProduct.description}
+                            onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Enter product description"
+                            rows={3}
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Image URL
+                          </label>
+                          <input
+                            type="url"
+                            value={newProduct.image}
+                            onChange={(e) => setNewProduct({...newProduct, image: e.target.value})}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Enter image URL (https://...)"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="border-t p-6 bg-gray-50">
+                      <div className="flex space-x-3">
+                        <button
+                          onClick={handleAddProduct}
+                          className="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-semibold"
+                        >
+                          <i className="fas fa-plus-circle mr-2"></i>
+                          Add Product
+                        </button>
+                        <button
+                          onClick={() => setShowAddProduct(false)}
+                          className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Products List */}
+            <div className="space-y-4">
+              {filteredProducts.length === 0 ? (
+                <div className="bg-white rounded-lg shadow p-8 text-center">
+                  <i className="fas fa-box-open text-4xl text-gray-300 mb-4"></i>
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">No products found</h3>
+                  <p className="text-gray-500 mb-4">
+                    {selectedCategory === 'all' 
+                      ? 'There are no products in your store yet.' 
+                      : `There are no products in the ${categories.find(c => c.id === selectedCategory)?.name} category.`}
+                  </p>
+                  <button
+                    onClick={() => setShowAddProduct(true)}
+                    className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition font-semibold"
+                  >
+                    <i className="fas fa-plus mr-2"></i>
+                    Add Your First Product
+                  </button>
+                </div>
+              ) : (
+                filteredProducts.map((product) => (
+                  <div key={product.id} className="bg-white rounded-lg shadow p-6">
+                    <div className="flex items-start space-x-4">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-24 h-24 object-cover rounded-lg"
+                      />
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-800">{product.name}</h3>
+                        <p className="text-sm text-gray-500">{product.category}</p>
+                        <p className="text-green-600 font-semibold mt-1">
+                          ₹{product.price} <span className="text-gray-400 line-through text-sm">₹{product.originalPrice}</span>
+                        </p>
+                        {product.discount > 0 && (
+                          <p className="text-red-600 text-sm font-semibold mt-1">
+                            You Save: ₹{product.discount.toFixed(2)}
+                          </p>
+                        )}
+                        <p className="text-sm text-gray-600 mt-1">{product.description}</p>
+                      </div>
+                      <div className="flex flex-col space-y-2">
+                        <button
+                          onClick={() => toggleStock(product)}
+                          className={`px-4 py-2 rounded-lg font-semibold transition ${
+                            product.inStock !== false
+                              ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                              : 'bg-red-100 text-red-700 hover:bg-red-200'
+                          }`}
+                        >
+                          {product.inStock !== false ? 'In Stock' : 'Out of Stock'}
+                        </button>
                         <button
                           onClick={() => {
-                            setUploadMethod('url');
+                            setEditingPriceProduct(product);
+                            setShowPriceEdit(true);
+                            setMrpPrice(product.originalPrice.toString());
+                            setSellingPrice(product.price.toString());
+                          }}
+                          className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition"
+                        >
+                          Edit Price
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingProduct(product);
+                            setShowImageInput(true);
                             // Remove URL parameters for cleaner display
                             const cleanUrl = product.image.split('?')[0];
                             setImageUrl(cleanUrl);
                           }}
-                          className={`flex-1 py-2 px-4 rounded-lg font-semibold transition ${
-                            uploadMethod === 'url'
-                              ? 'bg-green-600 text-white'
-                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                          }`}
+                          className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition"
                         >
-                          <i className="fas fa-link mr-2"></i>
-                          Image URL
-                        </button>
-                        <button
-                          onClick={() => {
-                            setUploadMethod('file');
-                            setImageUrl('');
-                          }}
-                          className={`flex-1 py-2 px-4 rounded-lg font-semibold transition ${
-                            uploadMethod === 'file'
-                              ? 'bg-green-600 text-white'
-                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                          }`}
-                        >
-                          <i className="fas fa-image mr-2"></i>
-                          Upload from Gallery
+                          Change Image
                         </button>
                       </div>
                     </div>
 
-                    {uploadMethod === 'url' ? (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Image URL (from any source)
-                        </label>
-                        <div className="flex space-x-2">
-                          <input
-                            type="url"
-                            value={imageUrl}
-                            onChange={(e) => setImageUrl(e.target.value)}
-                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            placeholder="Enter image URL (https://...)"
-                          />
+                    {/* Image Update Form */}
+                    {showImageInput && editingProduct?.id === product.id && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-3">
+                            Choose Upload Method
+                          </label>
+                          <div className="flex space-x-4">
+                            <button
+                              onClick={() => {
+                                setUploadMethod('url');
+                                // Remove URL parameters for cleaner display
+                                const cleanUrl = product.image.split('?')[0];
+                                setImageUrl(cleanUrl);
+                              }}
+                              className={`flex-1 py-2 px-4 rounded-lg font-semibold transition ${
+                                uploadMethod === 'url'
+                                  ? 'bg-green-600 text-white'
+                                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              }`}
+                            >
+                              <i className="fas fa-link mr-2"></i>
+                              Image URL
+                            </button>
+                            <button
+                              onClick={() => {
+                                setUploadMethod('file');
+                                setImageUrl('');
+                              }}
+                              className={`flex-1 py-2 px-4 rounded-lg font-semibold transition ${
+                                uploadMethod === 'file'
+                                  ? 'bg-green-600 text-white'
+                                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              }`}
+                            >
+                              <i className="fas fa-image mr-2"></i>
+                              Upload from Gallery
+                            </button>
+                          </div>
+                        </div>
+
+                        {uploadMethod === 'url' ? (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Image URL (from any source)
+                            </label>
+                            <div className="flex space-x-2">
+                              <input
+                                type="url"
+                                value={imageUrl}
+                                onChange={(e) => setImageUrl(e.target.value)}
+                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                placeholder="Enter image URL (https://...)"
+                              />
+                              <button
+                                onClick={() => handleImageUpdate(product)}
+                                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                              >
+                                Update
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setShowImageInput(false);
+                                  setEditingProduct(null);
+                                  setImageUrl('');
+                                  setUploadMethod('url');
+                                }}
+                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Upload Image from Gallery
+                            </label>
+                            <div className="space-y-3">
+                              <div className="flex items-center space-x-2">
+                                <label className="flex-1 cursor-pointer">
+                                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-500 transition">
+                                    <i className="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
+                                    <p className="text-sm text-gray-600">Click to select image</p>
+                                    <p className="text-xs text-gray-400 mt-1">Max size: 5MB</p>
+                                  </div>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleFileUpload}
+                                    className="hidden"
+                                  />
+                                </label>
+                              </div>
+                              {imageUrl && (
+                                <div className="space-y-2">
+                                  <div className="border border-gray-300 rounded-lg p-2">
+                                    <img
+                                      src={imageUrl}
+                                      alt="Preview"
+                                      className="w-full h-48 object-cover rounded"
+                                    />
+                                  </div>
+                                  <div className="flex space-x-2">
+                                    <button
+                                      onClick={() => handleImageUpdate(product)}
+                                      className="flex-1 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                                    >
+                                      Update Image
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setShowImageInput(false);
+                                        setEditingProduct(null);
+                                        setImageUrl('');
+                                        setUploadMethod('url');
+                                      }}
+                                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Price Update Form */}
+                    {showPriceEdit && editingPriceProduct?.id === product.id && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                          <i className="fas fa-tag mr-2 text-purple-600"></i>
+                          Update Product Price
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              MRP (Maximum Retail Price)
+                            </label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
+                              <input
+                                type="number"
+                                value={mrpPrice}
+                                onChange={(e) => setMrpPrice(e.target.value)}
+                                className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                placeholder="Enter MRP"
+                                min="0"
+                                step="0.01"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Selling Price (After Discount)
+                            </label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
+                              <input
+                                type="number"
+                                value={sellingPrice}
+                                onChange={(e) => setSellingPrice(e.target.value)}
+                                className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                placeholder="Enter selling price"
+                                min="0"
+                                step="0.01"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Discount Preview */}
+                        {mrpPrice && sellingPrice && parseFloat(mrpPrice) >= parseFloat(sellingPrice) && (
+                          <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium text-green-700">
+                                <i className="fas fa-rupee-sign mr-2"></i>
+                                Customer Savings:
+                              </span>
+                              <span className="text-lg font-bold text-green-700">
+                                ₹{(parseFloat(mrpPrice) - parseFloat(sellingPrice)).toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Validation Warning */}
+                        {mrpPrice && sellingPrice && parseFloat(sellingPrice) > parseFloat(mrpPrice) && (
+                          <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <p className="text-sm text-red-700">
+                              <i className="fas fa-exclamation-triangle mr-2"></i>
+                              Selling price cannot be greater than MRP!
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="flex space-x-2 mt-4">
                           <button
-                            onClick={() => handleImageUpdate(product)}
-                            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                            onClick={() => handlePriceUpdate(product)}
+                            className="flex-1 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-semibold"
                           >
-                            Update
+                            <i className="fas fa-check mr-2"></i>
+                            Update Price
                           </button>
                           <button
                             onClick={() => {
-                              setShowImageInput(false);
-                              setEditingProduct(null);
-                              setImageUrl('');
-                              setUploadMethod('url');
+                              setShowPriceEdit(false);
+                              setEditingPriceProduct(null);
+                              setMrpPrice('');
+                              setSellingPrice('');
                             }}
-                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold"
                           >
                             Cancel
                           </button>
                         </div>
                       </div>
-                    ) : (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Upload Image from Gallery
-                        </label>
-                        <div className="space-y-3">
-                          <div className="flex items-center space-x-2">
-                            <label className="flex-1 cursor-pointer">
-                              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-500 transition">
-                                <i className="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
-                                <p className="text-sm text-gray-600">Click to select image</p>
-                                <p className="text-xs text-gray-400 mt-1">Max size: 5MB</p>
-                              </div>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleFileUpload}
-                                className="hidden"
-                              />
-                            </label>
-                          </div>
-                          {imageUrl && (
-                            <div className="space-y-2">
-                              <div className="border border-gray-300 rounded-lg p-2">
-                                <img
-                                  src={imageUrl}
-                                  alt="Preview"
-                                  className="w-full h-48 object-cover rounded"
-                                />
-                              </div>
-                              <div className="flex space-x-2">
-                                <button
-                                  onClick={() => handleImageUpdate(product)}
-                                  className="flex-1 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-                                >
-                                  Update Image
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setShowImageInput(false);
-                                    setEditingProduct(null);
-                                    setImageUrl('');
-                                    setUploadMethod('url');
-                                  }}
-                                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
                     )}
                   </div>
-                )}
-
-                {/* Price Update Form */}
-                {showPriceEdit && editingPriceProduct?.id === product.id && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-3">
-                      <i className="fas fa-tag mr-2 text-purple-600"></i>
-                      Update Product Price
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          MRP (Maximum Retail Price)
-                        </label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
-                          <input
-                            type="number"
-                            value={mrpPrice}
-                            onChange={(e) => setMrpPrice(e.target.value)}
-                            className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                            placeholder="Enter MRP"
-                            min="0"
-                            step="0.01"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Selling Price (After Discount)
-                        </label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
-                          <input
-                            type="number"
-                            value={sellingPrice}
-                            onChange={(e) => setSellingPrice(e.target.value)}
-                            className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                            placeholder="Enter selling price"
-                            min="0"
-                            step="0.01"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Discount Preview */}
-                    {mrpPrice && sellingPrice && parseFloat(mrpPrice) >= parseFloat(sellingPrice) && (
-                      <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-green-700">
-                            <i className="fas fa-percentage mr-2"></i>
-                            Customer Discount:
-                          </span>
-                          <span className="text-lg font-bold text-green-700">
-                            ₹{(parseFloat(mrpPrice) - parseFloat(sellingPrice)).toFixed(2)}
-                          </span>
-                        </div>
-                        <p className="text-xs text-green-600 mt-1">
-                          Customers will save {((parseFloat(mrpPrice) - parseFloat(sellingPrice)) / parseFloat(mrpPrice) * 100).toFixed(1)}% on this product
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Validation Warning */}
-                    {mrpPrice && sellingPrice && parseFloat(sellingPrice) > parseFloat(mrpPrice) && (
-                      <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                        <p className="text-sm text-red-700">
-                          <i className="fas fa-exclamation-triangle mr-2"></i>
-                          Selling price cannot be greater than MRP!
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="flex space-x-2 mt-4">
-                      <button
-                        onClick={() => handlePriceUpdate(product)}
-                        className="flex-1 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-semibold"
-                      >
-                        <i className="fas fa-check mr-2"></i>
-                        Update Price
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowPriceEdit(false);
-                          setEditingPriceProduct(null);
-                          setMrpPrice('');
-                          setSellingPrice('');
-                        }}
-                        className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
+                ))
+              )}
+            </div>
           </div>
         )}
 

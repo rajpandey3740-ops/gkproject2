@@ -16,6 +16,9 @@ productRouter.get('/category/:category', (req, res) => productController.getProd
 // GET /api/products - Get all products with optional filters
 productRouter.get('/', (req, res) => productController.getProducts(req, res));
 
+// POST /api/products - Create a new product (owner only)
+productRouter.post('/', (req, res) => productController.createProduct(req, res));
+
 // GET /api/products/:id - Get single product
 productRouter.get('/:id', (req, res) => productController.getProductById(req, res));
 

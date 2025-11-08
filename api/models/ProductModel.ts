@@ -73,4 +73,13 @@ const ProductSchema: Schema = new Schema(
 ProductSchema.index({ name: 'text', description: 'text' });
 ProductSchema.index({ category: 1, price: 1 });
 
+// Pre-save hook to generate ID if not provided
+ProductSchema.pre<IProduct>('save', function(next) {
+  if (!this.id) {
+    // Generate a unique ID based on timestamp
+    this.id = Date.now() % 1000000;
+  }
+  next();
+});
+
 export default mongoose.model<IProduct>('Product', ProductSchema);

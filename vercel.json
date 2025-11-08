@@ -19,13 +19,21 @@
         {
           "key": "Access-Control-Allow-Origin",
           "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "X-Requested-With, Content-Type, Authorization"
         }
       ]
     }
   ],
   "functions": {
     "api/index.ts": {
-      "runtime": "@vercel/node@3.2.20",
+      "runtime": "@vercel/node@5.5.4",
       "memory": 1024,
       "maxDuration": 10
     }

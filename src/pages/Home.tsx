@@ -6,7 +6,8 @@ import ProductCard from '../components/ProductCard';
 import CartModal from '../components/CartModal';
 import CheckoutModal from '../components/CheckoutModal';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+// Use relative URLs for Vercel deployment
+const API_BASE_URL = '/api';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();

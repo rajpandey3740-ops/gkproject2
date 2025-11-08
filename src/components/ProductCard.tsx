@@ -14,6 +14,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
   onAddToCart,
   onUpdateQuantity,
 }) => {
+  // Calculate discount amount in rupees
+  const discountAmount = product.originalPrice - product.price;
+
   return (
     <div className="product-card bg-white rounded-2xl shadow-md overflow-hidden">
       <div className="relative">
@@ -24,9 +27,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
             className="w-full h-full object-contain p-4"
           />
         </div>
-        {product.discount > 0 && (
-          <div className="badge-discount absolute top-3 right-3 text-white px-3 py-1 rounded-full text-sm font-bold">
-            {product.discount}% OFF
+        {discountAmount > 0 && (
+          <div className="badge-discount absolute top-3 right-3 text-white px-3 py-1 rounded-full text-sm font-bold bg-gradient-to-r from-red-500 to-orange-500">
+            ₹{discountAmount} OFF
           </div>
         )}
         {product.popular && (
@@ -42,7 +45,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <p className="text-sm text-gray-500 mb-3">{product.unit}</p>
         <div className="flex items-center mb-4">
           <span className="text-2xl font-bold text-gray-900">₹{product.price}</span>
-          {product.discount > 0 && (
+          {discountAmount > 0 && (
             <span className="text-sm text-gray-400 line-through ml-2">
               ₹{product.originalPrice}
             </span>

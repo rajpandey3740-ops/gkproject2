@@ -12,6 +12,15 @@ export class ProductService {
   }
 
   /**
+   * Generate a unique product ID
+   */
+  private generateProductId(): number {
+    // For MongoDB, we can use timestamp-based ID
+    // For in-memory, we'll use a simple incrementing ID
+    return Date.now() % 1000000;
+  }
+
+  /**
    * Get all products with optional filtering
    */
   async getAllProducts(category?: string, search?: string): Promise<Product[]> {
@@ -147,9 +156,49 @@ export class ProductService {
   /**
    * Create a new product
    */
-  async createProduct(productData: Product): Promise<Product> {
+  async createProduct(productData: Partial<Product>): Promise<Product> {
     try {
-      const product = new ProductModel(productData);
+      // Use in-memory storage if MongoDB is not connected
+      if (!this.isMongoConnected()) {
+        // Generate ID if not provided
+        const id = productData.id || this.generateProductId();
+        
+        // Ensure all required fields are present
+        const newProduct: Product = {
+          id,
+          name: productData.name || '',
+          category: productData.category || '',
+          price: productData.price || 0,
+          originalPrice: productData.originalPrice || 0,
+          discount: productData.discount || 0,
+          image: productData.image || '',
+          description: productData.description || '',
+          unit: productData.unit || 'pcs',
+          inStock: productData.inStock !== undefined ? productData.inStock : true
+        };
+        
+        inMemoryProducts.unshift(newProduct);
+        return newProduct;
+      }
+      
+      // Generate ID if not provided
+      const id = productData.id || this.generateProductId();
+      
+      // Ensure all required fields are present
+      const newProduct: Product = {
+        id,
+        name: productData.name || '',
+        category: productData.category || '',
+        price: productData.price || 0,
+        originalPrice: productData.originalPrice || 0,
+        discount: productData.discount || 0,
+        image: productData.image || '',
+        description: productData.description || '',
+        unit: productData.unit || 'pcs',
+        inStock: productData.inStock !== undefined ? productData.inStock : true
+      };
+      
+      const product = new ProductModel(newProduct);
       await product.save();
       return product.toObject() as Product;
     } catch (error) {
@@ -193,6 +242,17 @@ export class ProductService {
    */
   async deleteProduct(id: number): Promise<boolean> {
     try {
+      // Use in-memory storage if MongoDB is not connected
+      if (!this.isMongoConnected()) {
+        const initialLength = inMemoryProducts.length;
+        const index = inMemoryProducts.findIndex(p => p.id === id);
+        if (index !== -1) {
+          inMemoryProducts.splice(index, 1);
+          return true;
+        }
+        return false;
+      }
+      
       const result = await ProductModel.deleteOne({ id });
       return result.deletedCount > 0;
     } catch (error) {

@@ -139,6 +139,76 @@ export class ProductController {
   }
 
   /**
+   * POST /api/products
+   * Create a new product (owner only)
+   */
+  async createProduct(req: Request, res: Response) {
+    try {
+      const productData = req.body;
+      
+      // Validate required fields
+      if (!productData.name || !productData.category || !productData.price || !productData.originalPrice) {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing required fields: name, category, price, originalPrice'
+        });
+      }
+      
+      // Validate price
+      const price = parseFloat(productData.price);
+      const originalPrice = parseFloat(productData.originalPrice);
+      
+      if (isNaN(price) || isNaN(originalPrice) || price <= 0 || originalPrice <= 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Price and originalPrice must be valid positive numbers'
+        });
+      }
+      
+      if (price > originalPrice) {
+        return res.status(400).json({
+          success: false,
+          error: 'Price cannot be greater than originalPrice'
+        });
+      }
+      
+      // Generate unique ID
+      const id = Date.now() % 1000000; // Simple ID generation for demo purposes
+      
+      // Calculate discount
+      const discount = originalPrice - price;
+      
+      // Add default values if not provided
+      const newProduct = {
+        id,
+        ...productData,
+        price,
+        originalPrice,
+        discount,
+        unit: productData.unit || 'pcs',
+        inStock: productData.inStock !== undefined ? productData.inStock : true,
+        description: productData.description || '',
+        image: productData.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80'
+      };
+      
+      const product = await productService.createProduct(newProduct);
+      
+      return res.status(201).json({
+        success: true,
+        message: 'Product created successfully',
+        data: product
+      });
+    } catch (error: any) {
+      console.error('Error creating product:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to create product',
+        message: error.message
+      });
+    }
+  }
+
+  /**
    * PATCH /api/products/:id
    * Update a product (owner only)
    */

@@ -553,7 +553,7 @@ async function loadProducts(category = 'all', search = '') {
 
 // Display products
 function displayProducts(products) {
-    const container = document.getElementById('products')
+    const container = document.getElementById('products');
     
     if (products.length === 0) {
         container.innerHTML = `
@@ -561,13 +561,16 @@ function displayProducts(products) {
                 <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>
                 <p class="text-xl text-gray-500">No products found</p>
             </div>
-        `
-        return
+        `;
+        return;
     }
     
     container.innerHTML = products.map(product => {
-        const cartItem = cart.find(item => item.id === product.id)
-        const inCart = cartItem ? cartItem.quantity : 0
+        const cartItem = cart.find(item => item.id === product.id);
+        const inCart = cartItem ? cartItem.quantity : 0;
+        
+        // Calculate discount amount in rupees
+        const discountAmount = product.originalPrice - product.price;
         
         return `
             <div class="product-card bg-white rounded-2xl shadow-md overflow-hidden">
@@ -575,9 +578,9 @@ function displayProducts(products) {
                     <div class="bg-gradient-to-br from-purple-100 to-pink-100 h-48 flex items-center justify-center">
                         <img src="${product.image}" alt="${product.name}" class="w-full h-full object-contain p-4" />
                     </div>
-                    ${product.discount > 0 ? `
-                        <div class="badge-discount absolute top-3 right-3 text-white px-3 py-1 rounded-full text-sm font-bold">
-                            ${product.discount}% OFF
+                    ${discountAmount > 0 ? `
+                        <div class="badge-discount absolute top-3 right-3 text-white px-3 py-1 rounded-full text-sm font-bold bg-gradient-to-r from-red-500 to-orange-500">
+                            ₹${discountAmount} OFF
                         </div>
                     ` : ''}
                     ${product.popular ? `
@@ -589,12 +592,18 @@ function displayProducts(products) {
                 <div class="p-4">
                     <h3 class="font-semibold text-gray-800 mb-2 h-12 line-clamp-2">${product.name}</h3>
                     <p class="text-sm text-gray-500 mb-3">${product.unit}</p>
-                    <div class="flex items-center mb-4">
+                    <div class="flex items-center mb-2">
                         <span class="text-2xl font-bold text-gray-900">₹${product.price}</span>
-                        ${product.discount > 0 ? `
-                            <span class="text-sm text-gray-400 line-through ml-2">₹${product.originalPrice}</span>
-                        ` : ''}
                     </div>
+                    ${discountAmount > 0 ? `
+                        <div class="flex items-center mb-3">
+                            <span class="text-sm text-gray-400 line-through">MRP: ₹${product.originalPrice}</span>
+                        </div>
+                    ` : `
+                        <div class="flex items-center mb-3">
+                            <span class="text-sm text-gray-500">MRP: ₹${product.originalPrice}</span>
+                        </div>
+                    `}
                     <div id="cart-control-${product.id}">
                         ${inCart > 0 ? `
                             <div class="flex items-center justify-between bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-4 rounded-xl shadow-md">
@@ -623,8 +632,8 @@ function displayProducts(products) {
                     </div>
                 </div>
             </div>
-        `
-    }).join('')
+        `;
+    }).join('');
 }
 
 // Select category

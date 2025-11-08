@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Order } from '../types';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+// Use relative URLs for Vercel deployment
+const API_BASE_URL = '/api';
 
 const MyOrders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
