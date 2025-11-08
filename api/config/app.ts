@@ -27,6 +27,15 @@ export function createApp(): Application {
     });
   });
 
+  // Simple test endpoint for Vercel
+  app.get('/api/test', (_req: Request, res: Response) => {
+    return res.json({
+      success: true,
+      message: 'Test endpoint working',
+      timestamp: new Date().toISOString()
+    });
+  });
+
   // Routes
   app.use('/api/products', productRoutes);
   app.use('/api/categories', categoryRoutes);

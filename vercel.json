@@ -4,6 +4,18 @@
   "framework": "vite",
   "rewrites": [
     {
+      "source": "/api/health",
+      "destination": "/api/health.ts"
+    },
+    {
+      "source": "/api/test-function",
+      "destination": "/api/vercel-test.ts"
+    },
+    {
+      "source": "/api/products-vercel",
+      "destination": "/api/products-vercel.ts"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/index.ts"
     },
@@ -34,7 +46,18 @@
   "functions": {
     "api/index.ts": {
       "runtime": "@vercel/node@5.5.4",
-      "memory": 1024,
+      "maxDuration": 10
+    },
+    "api/health.ts": {
+      "runtime": "@vercel/node@5.5.4",
+      "maxDuration": 10
+    },
+    "api/vercel-test.ts": {
+      "runtime": "@vercel/node@5.5.4",
+      "maxDuration": 10
+    },
+    "api/products-vercel.ts": {
+      "runtime": "@vercel/node@5.5.4",
       "maxDuration": 10
     }
   },
