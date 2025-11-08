@@ -5,19 +5,19 @@
   "rewrites": [
     {
       "source": "/api/health",
-      "destination": "/api/health.ts"
+      "destination": "/api/vercel-handler.ts"
     },
     {
-      "source": "/api/test-function",
-      "destination": "/api/vercel-test.ts"
+      "source": "/api/products/:id*",
+      "destination": "/api/vercel-handler.ts"
     },
     {
-      "source": "/api/products-vercel",
-      "destination": "/api/products-vercel.ts"
+      "source": "/api/categories/:id*",
+      "destination": "/api/vercel-handler.ts"
     },
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.ts"
+      "destination": "/api/vercel-handler.ts"
     },
     {
       "source": "/(.*)",
@@ -44,19 +44,7 @@
     }
   ],
   "functions": {
-    "api/index.ts": {
-      "runtime": "@vercel/node@5.5.4",
-      "maxDuration": 10
-    },
-    "api/health.ts": {
-      "runtime": "@vercel/node@5.5.4",
-      "maxDuration": 10
-    },
-    "api/vercel-test.ts": {
-      "runtime": "@vercel/node@5.5.4",
-      "maxDuration": 10
-    },
-    "api/products-vercel.ts": {
+    "api/vercel-handler.ts": {
       "runtime": "@vercel/node@5.5.4",
       "maxDuration": 10
     }

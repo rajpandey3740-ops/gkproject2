@@ -15,6 +15,4 @@ api/scripts/*
 api/data/*
 api/config/*
 !api/index.ts
-!api/health.ts
-!api/vercel-test.ts
-!api/products-vercel.ts
+!api/vercel-handler.ts
