@@ -5,3 +5,13 @@ node_modules
 .env.local
 index.tsx
 renderer.tsx
+api/controllers/*
+api/models/*
+api/routes/*
+api/services/*
+api/middleware/*
+api/utils/*
+api/scripts/*
+api/data/*
+api/config/*
+!api/index.ts
