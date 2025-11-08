@@ -1,4 +1,5 @@
-import express, { Application, Request, Response, NextFunction } from 'express';
+import express from 'express';
+import { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import productRoutes from '../routes/productRoutes';
 import categoryRoutes from '../routes/categoryRoutes';
