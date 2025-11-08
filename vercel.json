@@ -38,7 +38,6 @@
       "maxDuration": 10
     }
   },
-  "nodeVersion": "20.x",
   "build": {
     "env": {
       "NODE_VERSION": "20.18.0"
