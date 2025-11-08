@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { products } from './data/productsData';
 import { categories } from './data/categoriesData';
 
-export default function handler(req: VercelRequest, res: VercelResponse) {
+export default function handler(req: VercelRequest, res: VercelResponse): void {
   try {
     // Set CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -44,7 +44,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-function handleProducts(req: VercelRequest, res: VercelResponse, path: string[]) {
+function handleProducts(req: VercelRequest, res: VercelResponse, path: string[]): void {
   try {
     if (req.method === 'GET') {
       // Handle single product by ID
@@ -105,7 +105,7 @@ function handleProducts(req: VercelRequest, res: VercelResponse, path: string[])
   }
 }
 
-function handleCategories(req: VercelRequest, res: VercelResponse, path: string[]) {
+function handleCategories(req: VercelRequest, res: VercelResponse, path: string[]): void {
   try {
     if (req.method === 'GET') {
       // Handle single category by ID
