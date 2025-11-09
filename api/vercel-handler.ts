@@ -4,6 +4,9 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { products } from './data/productsData';
 import { categories } from './data/categoriesData';
 
+// In-memory orders storage
+let orders: any[] = [];
+
 // Type definitions
 interface Product {
   id: number;
@@ -22,6 +25,39 @@ interface Category {
   id: string;
   name: string;
   icon: string;
+}
+
+interface OrderItem {
+  id: number;
+  name: string;
+  price: number;
+  originalPrice: number;
+  quantity: number;
+  image: string;
+  unit: string;
+}
+
+interface OrderAddress {
+  name: string;
+  phone: string;
+  street: string;
+  city: string;
+  state: string;
+  pin: string;
+}
+
+interface Order {
+  orderId: string;
+  username?: string;
+  items: OrderItem[];
+  address: OrderAddress;
+  paymentMethod: 'cod' | 'upi';
+  subtotal: number;
+  savings: number;
+  total: number;
+  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function handler(req: VercelRequest, res: VercelResponse): void {
@@ -50,6 +86,8 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
       handleProducts(req, res, pathParts);
     } else if (pathParts[0] === 'categories') {
       handleCategories(req, res, pathParts);
+    } else if (pathParts[0] === 'orders') {
+      handleOrders(req, res, pathParts);
     } else if (pathParts[0] === 'health') {
       res.status(200).json({
         success: true,
@@ -239,6 +277,147 @@ function handleCategories(req: VercelRequest, res: VercelResponse, path: string[
     res.status(500).json({
       success: false,
       error: 'Failed to fetch categories'
+    });
+  }
+}
+
+function handleOrders(req: VercelRequest, res: VercelResponse, path: string[]): void {
+  try {
+    if (req.method === 'GET') {
+      // Handle single order by ID
+      if (path[1]) {
+        const orderId = path[1];
+        const order = orders.find(o => o.orderId === orderId);
+        if (order) {
+          res.status(200).json({
+            success: true,
+            data: order
+          });
+        } else {
+          res.status(404).json({
+            success: false,
+            error: 'Order not found'
+          });
+        }
+        return;
+      }
+      
+      // Handle orders with filters
+      let filteredOrders = [...orders];
+      
+      // Handle username filter
+      const username = req.query.username as string;
+      if (username) {
+        filteredOrders = filteredOrders.filter(o => o.username === username);
+      }
+      
+      res.status(200).json({
+        success: true,
+        count: filteredOrders.length,
+        data: filteredOrders
+      });
+    } else if (req.method === 'POST') {
+      // Handle creating a new order
+      const orderData = req.body;
+      
+      // Validate required fields
+      if (!orderData.items || !orderData.items.length) {
+        res.status(400).json({
+          success: false,
+          error: 'Order must contain at least one item'
+        });
+        return;
+      }
+
+      if (!orderData.address) {
+        res.status(400).json({
+          success: false,
+          error: 'Delivery address is required'
+        });
+        return;
+      }
+
+      if (!orderData.paymentMethod) {
+        res.status(400).json({
+          success: false,
+          error: 'Payment method is required'
+        });
+        return;
+      }
+      
+      // Generate unique order ID
+      const timestamp = Date.now();
+      const random = Math.floor(Math.random() * 10000);
+      const orderId = `ORD${timestamp}${random}`;
+      const now = new Date().toISOString();
+      
+      const newOrder: Order = {
+        ...orderData,
+        orderId,
+        status: 'pending',
+        createdAt: now,
+        updatedAt: now
+      };
+      
+      // Add to in-memory orders
+      orders.unshift(newOrder);
+      
+      res.status(201).json({
+        success: true,
+        message: 'Order placed successfully',
+        data: newOrder
+      });
+    } else if (req.method === 'PATCH') {
+      // Handle updating order status
+      if (path[2] === 'status') {
+        const orderId = path[1];
+        const { status } = req.body;
+        
+        if (!status) {
+          res.status(400).json({
+            success: false,
+            error: 'Status is required'
+          });
+          return;
+        }
+        
+        const orderIndex = orders.findIndex(o => o.orderId === orderId);
+        if (orderIndex !== -1) {
+          orders[orderIndex] = {
+            ...orders[orderIndex],
+            status,
+            updatedAt: new Date().toISOString()
+          };
+          
+          res.status(200).json({
+            success: true,
+            message: 'Order status updated successfully',
+            data: orders[orderIndex]
+          });
+        } else {
+          res.status(404).json({
+            success: false,
+            error: 'Order not found'
+          });
+        }
+        return;
+      }
+      
+      res.status(404).json({
+        success: false,
+        error: 'Endpoint not found'
+      });
+    } else {
+      res.status(405).json({
+        success: false,
+        error: 'Method not allowed'
+      });
+    }
+  } catch (error) {
+    console.error('Orders API Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to process order'
     });
   }
 }
