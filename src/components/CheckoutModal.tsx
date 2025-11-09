@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { CartItem, Address } from '../types';
+import AddressModal from './AddressModal';
 
 const API_BASE_URL = '/api';
 
@@ -18,6 +19,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   onSuccess,
 }) => {
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [showAddressModal, setShowAddressModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
@@ -141,18 +143,40 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   </h3>
                   {selectedAddress ? (
                     <div className="bg-gray-50 rounded-xl p-4 mb-3">
-                      <p className="font-semibold">{selectedAddress.name}</p>
-                      <p className="text-sm text-gray-600">{selectedAddress.phone}</p>
-                      <p className="text-sm text-gray-700 mt-1">
-                        {selectedAddress.street}, {selectedAddress.city},{' '}
-                        {selectedAddress.state} - {selectedAddress.pin}
-                      </p>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-semibold">{selectedAddress.name}</p>
+                          <p className="text-sm text-gray-600">{selectedAddress.phone}</p>
+                          <p className="text-sm text-gray-700 mt-1">
+                            {selectedAddress.street}, {selectedAddress.city},{' '}
+                            {selectedAddress.state} - {selectedAddress.pin}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setShowAddressModal(true)}
+                          className="text-purple-600 hover:text-purple-800"
+                        >
+                          <i className="fas fa-edit"></i>
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     <div className="text-center py-4 bg-gray-50 rounded-xl">
-                      <p className="text-gray-500 text-sm">No address selected</p>
+                      <p className="text-gray-500 text-sm mb-3">No address selected</p>
+                      <button
+                        onClick={() => setShowAddressModal(true)}
+                        className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-xl font-semibold hover:opacity-90 transition-all"
+                      >
+                        Add Address
+                      </button>
                     </div>
                   )}
+                  <button
+                    onClick={() => setShowAddressModal(true)}
+                    className="w-full bg-gray-100 text-gray-800 py-2 rounded-xl font-semibold hover:bg-gray-200 transition-all"
+                  >
+                    {selectedAddress ? 'Change Address' : 'Select Address'}
+                  </button>
                 </div>
                 {/* Payment Method */}
                 <div>
@@ -240,6 +264,12 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
           </div>
         </div>
       </div>
+      <AddressModal
+        isOpen={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
+        onAddressSelect={setSelectedAddress}
+        selectedAddress={selectedAddress}
+      />
     </div>
   );
 };

@@ -118,6 +118,39 @@ function handleProducts(req: VercelRequest, res: VercelResponse, path: string[])
         count: filteredProducts.length,
         data: filteredProducts
       });
+    } else if (req.method === 'POST') {
+      // Handle creating a new product
+      const newProduct = req.body;
+      
+      // Generate a unique ID
+      const id = Date.now() % 1000000;
+      
+      // Calculate discount
+      const price = parseFloat(newProduct.price);
+      const originalPrice = parseFloat(newProduct.originalPrice);
+      const discount = originalPrice - price;
+      
+      // Add default values if not provided
+      const product = {
+        id,
+        ...newProduct,
+        price,
+        originalPrice,
+        discount,
+        unit: newProduct.unit || 'pcs',
+        inStock: newProduct.inStock !== undefined ? newProduct.inStock : true,
+        description: newProduct.description || '',
+        image: newProduct.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80'
+      };
+      
+      // Add to in-memory products
+      products.unshift(product);
+      
+      res.status(201).json({
+        success: true,
+        message: 'Product created successfully',
+        data: product
+      });
     } else {
       res.status(405).json({
         success: false,
@@ -172,6 +205,28 @@ function handleCategories(req: VercelRequest, res: VercelResponse, path: string[
         success: true,
         count: categoriesData.length,
         data: categoriesData
+      });
+    } else if (req.method === 'POST') {
+      // Handle creating a new category
+      const newCategory = req.body;
+      
+      // Check if category already exists
+      const exists = categories.some(c => c.id === newCategory.id);
+      if (exists) {
+        res.status(400).json({
+          success: false,
+          error: 'Category with this ID already exists'
+        });
+        return;
+      }
+      
+      // Add to in-memory categories
+      categories.push(newCategory);
+      
+      res.status(201).json({
+        success: true,
+        message: 'Category created successfully',
+        data: newCategory
       });
     } else {
       res.status(405).json({

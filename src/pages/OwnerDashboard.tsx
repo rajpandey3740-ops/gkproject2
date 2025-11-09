@@ -265,7 +265,11 @@ const OwnerDashboard = () => {
       }
     } catch (error: any) {
       console.error('Error adding product:', error);
-      alert(`Failed to add product: ${error.response?.data?.error || error.message}`);
+      if (error.response?.status === 405) {
+        alert('Product creation is not supported in this deployment environment');
+      } else {
+        alert(`Failed to add product: ${error.response?.data?.error || error.message || 'Unknown error'}`);
+      }
     }
   };
 
@@ -305,7 +309,11 @@ const OwnerDashboard = () => {
       }
     } catch (error: any) {
       console.error('Error adding category:', error);
-      alert(`Failed to add category: ${error.response?.data?.error || error.message}`);
+      if (error.response?.status === 405) {
+        alert('Category creation is not supported in this deployment environment');
+      } else {
+        alert(`Failed to add category: ${error.response?.data?.error || error.message || 'Unknown error'}`);
+      }
     }
   };
 
