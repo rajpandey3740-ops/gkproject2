@@ -23,7 +23,9 @@
     "types": ["node", "@vercel/node"],
     "allowJs": true,
     "declaration": false,
-    "sourceMap": true
+    "sourceMap": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true
   },
   "include": ["./**/*.ts"],
   "exclude": ["node_modules", "dist"]
