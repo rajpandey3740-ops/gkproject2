@@ -62,6 +62,8 @@ interface Order {
 
 export default function handler(req: VercelRequest, res: VercelResponse): void {
   try {
+    console.log('API Request:', req.method, req.url);
+    
     // Set CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');

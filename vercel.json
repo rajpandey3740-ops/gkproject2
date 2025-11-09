@@ -16,6 +16,10 @@
       "destination": "/api/vercel-handler.ts"
     },
     {
+      "source": "/api/orders/:id*",
+      "destination": "/api/vercel-handler.ts"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/vercel-handler.ts"
     },
