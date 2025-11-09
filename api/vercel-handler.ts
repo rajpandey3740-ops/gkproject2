@@ -189,6 +189,59 @@ function handleProducts(req: VercelRequest, res: VercelResponse, path: string[])
         message: 'Product created successfully',
         data: product
       });
+    } else if (req.method === 'PATCH') {
+      // Handle updating an existing product
+      if (!path[1]) {
+        res.status(400).json({
+          success: false,
+          error: 'Product ID is required for update'
+        });
+        return;
+      }
+      
+      const productId = parseInt(path[1]);
+      if (isNaN(productId)) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid product ID'
+        });
+        return;
+      }
+      
+      const updates = req.body;
+      const productIndex = products.findIndex(p => p.id === productId);
+      
+      if (productIndex === -1) {
+        res.status(404).json({
+          success: false,
+          error: 'Product not found'
+        });
+        return;
+      }
+      
+      // Apply updates
+      const updatedProduct = {
+        ...products[productIndex],
+        ...updates
+      };
+      
+      // Recalculate discount if prices are updated
+      if (updates.originalPrice !== undefined || updates.price !== undefined) {
+        const originalPrice = parseFloat(updates.originalPrice !== undefined ? updates.originalPrice : updatedProduct.originalPrice);
+        const price = parseFloat(updates.price !== undefined ? updates.price : updatedProduct.price);
+        if (!isNaN(originalPrice) && !isNaN(price)) {
+          updatedProduct.discount = originalPrice - price;
+        }
+      }
+      
+      // Update in-memory products
+      products[productIndex] = updatedProduct;
+      
+      res.status(200).json({
+        success: true,
+        message: 'Product updated successfully',
+        data: updatedProduct
+      });
     } else {
       res.status(405).json({
         success: false,
@@ -320,8 +373,18 @@ function handleOrders(req: VercelRequest, res: VercelResponse, path: string[]): 
       // Handle creating a new order
       const orderData = req.body;
       
-      // Validate required fields
-      if (!orderData.items || !orderData.items.length) {
+      console.log('Order data received:', JSON.stringify(orderData, null, 2));
+      
+      // Validate required fields with better error messages
+      if (!orderData) {
+        res.status(400).json({
+          success: false,
+          error: 'No order data provided'
+        });
+        return;
+      }
+
+      if (!orderData.items || !Array.isArray(orderData.items) || orderData.items.length === 0) {
         res.status(400).json({
           success: false,
           error: 'Order must contain at least one item'
@@ -341,6 +404,108 @@ function handleOrders(req: VercelRequest, res: VercelResponse, path: string[]): 
         res.status(400).json({
           success: false,
           error: 'Payment method is required'
+        });
+        return;
+      }
+      
+      // Validate items with detailed error messages
+      for (let i = 0; i < orderData.items.length; i++) {
+        const item = orderData.items[i];
+        if (!item) {
+          res.status(400).json({
+            success: false,
+            error: `Item at index ${i} is null or undefined`
+          });
+          return;
+        }
+        
+        if (typeof item.id === 'undefined' || item.id === null) {
+          res.status(400).json({
+            success: false,
+            error: `Item at index ${i} is missing id`
+          });
+          return;
+        }
+        
+        if (!item.name) {
+          res.status(400).json({
+            success: false,
+            error: `Item at index ${i} is missing name`
+          });
+          return;
+        }
+        
+        if (typeof item.price !== 'number' || isNaN(item.price)) {
+          res.status(400).json({
+            success: false,
+            error: `Item at index ${i} has invalid price: ${item.price}`
+          });
+          return;
+        }
+        
+        if (typeof item.originalPrice !== 'number' || isNaN(item.originalPrice)) {
+          res.status(400).json({
+            success: false,
+            error: `Item at index ${i} has invalid originalPrice: ${item.originalPrice}`
+          });
+          return;
+        }
+        
+        if (typeof item.quantity !== 'number' || isNaN(item.quantity) || item.quantity <= 0) {
+          res.status(400).json({
+            success: false,
+            error: `Item at index ${i} has invalid quantity: ${item.quantity}`
+          });
+          return;
+        }
+      }
+      
+      // Validate address with detailed error messages
+      const address = orderData.address;
+      if (!address.name) {
+        res.status(400).json({
+          success: false,
+          error: 'Address is missing name'
+        });
+        return;
+      }
+      
+      if (!address.phone) {
+        res.status(400).json({
+          success: false,
+          error: 'Address is missing phone'
+        });
+        return;
+      }
+      
+      if (!address.street) {
+        res.status(400).json({
+          success: false,
+          error: 'Address is missing street'
+        });
+        return;
+      }
+      
+      if (!address.city) {
+        res.status(400).json({
+          success: false,
+          error: 'Address is missing city'
+        });
+        return;
+      }
+      
+      if (!address.state) {
+        res.status(400).json({
+          success: false,
+          error: 'Address is missing state'
+        });
+        return;
+      }
+      
+      if (!address.pin) {
+        res.status(400).json({
+          success: false,
+          error: 'Address is missing pin'
         });
         return;
       }
@@ -417,7 +582,8 @@ function handleOrders(req: VercelRequest, res: VercelResponse, path: string[]): 
     console.error('Orders API Error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to process order'
+      error: 'Failed to process order',
+      message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 }

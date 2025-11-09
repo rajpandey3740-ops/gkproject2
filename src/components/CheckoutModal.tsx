@@ -50,6 +50,20 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
       // Get username from localStorage
       const username = localStorage.getItem('username') || 'Guest';
 
+      // Log cart data for debugging
+      console.log('Cart data:', cart);
+      console.log('Cart items structure:', cart.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        originalPrice: item.originalPrice,
+        quantity: item.quantity,
+        image: item.image,
+        unit: item.unit,
+        type: typeof item.id,
+        hasRequiredFields: !!(item.id && item.name && typeof item.price === 'number' && typeof item.originalPrice === 'number' && typeof item.quantity === 'number')
+      })));
+
       // Prepare order data
       const orderData = {
         username,
@@ -76,18 +90,49 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
         total
       };
 
+      console.log('Sending order data:', orderData);
+
+      // Validate order data before sending
+      if (!orderData.items || orderData.items.length === 0) {
+        throw new Error('No items in cart');
+      }
+
+      if (!orderData.address.name || !orderData.address.phone || !orderData.address.street || 
+          !orderData.address.city || !orderData.address.state || !orderData.address.pin) {
+        throw new Error('Incomplete delivery address');
+      }
+
+      if (!orderData.paymentMethod) {
+        throw new Error('Payment method not selected');
+      }
+
       // Send order to backend
       const response = await axios.post(`${API_BASE_URL}/orders`, orderData);
+
+      console.log('Order response:', response.data);
 
       if (response.data.success) {
         alert(`Order placed successfully! Order ID: ${response.data.data.orderId}`);
         onSuccess();
       } else {
-        alert('Failed to place order. Please try again.');
+        alert(`Failed to place order: ${response.data.error || 'Unknown error'}`);
       }
     } catch (error: any) {
       console.error('Error placing order:', error);
-      alert('Failed to place order. Please try again.');
+      if (error.response) {
+        // Server responded with error status
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+        alert(`Failed to place order: ${error.response.data.error || error.response.data.message || 'Server error'}`);
+      } else if (error.request) {
+        // Request was made but no response received
+        console.error('No response received:', error.request);
+        alert('Failed to place order: No response from server. Please check your connection.');
+      } else {
+        // Something else happened
+        console.error('Error message:', error.message);
+        alert(`Failed to place order: ${error.message || 'Unknown error'}`);
+      }
     } finally {
       setIsPlacingOrder(false);
     }

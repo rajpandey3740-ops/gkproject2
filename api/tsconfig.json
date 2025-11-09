@@ -25,7 +25,8 @@
     "declaration": false,
     "sourceMap": true,
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    "isolatedModules": true
   },
   "include": ["./**/*.ts"],
   "exclude": ["node_modules", "dist"]
