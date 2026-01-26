@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import MyOrders from './pages/MyOrders';
 import OwnerLogin from './pages/OwnerLogin';
 import OwnerDashboard from './pages/OwnerDashboard';
+import EmailLogin from './components/EmailLogin';
 import './App.css';
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<EmailLogin />} />
         <Route path="/orders" element={<MyOrders />} />
         <Route path="/owner/login" element={<OwnerLogin />} />
         <Route path="/owner/dashboard" element={<OwnerDashboard />} />

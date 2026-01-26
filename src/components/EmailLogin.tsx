@@ -40,6 +40,11 @@ const EmailLogin: React.FC = () => {
       return;
     }
     
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+    
     setLoading(true);
     
     try {
@@ -47,7 +52,7 @@ const EmailLogin: React.FC = () => {
       const result = await signUp(email, password, name);
       
       if (result.success && result.user) {
-        // Save user data to our backend
+        // Save user data to our backend with mobile number
         try {
           await axios.post(`${API_BASE_URL}/auth/email/signup/request-verification`, {
             email,
@@ -59,7 +64,7 @@ const EmailLogin: React.FC = () => {
           console.warn('Backend user creation failed:', backendError);
         }
         
-        setMessage('Verification email sent! Please check your inbox and click the verification link before logging in.');
+        setMessage('Verification email sent! Please check your inbox and click the verification link.');
         setStep('email-sent');
       } else {
         // Check if this is an "email already exists" error
@@ -146,6 +151,7 @@ const EmailLogin: React.FC = () => {
         
         if (!result.user.emailVerified) {
           setError('Please verify your email address first. Check your inbox for the verification email.');
+          setStep('email-sent');
           return;
         }
         
@@ -161,6 +167,8 @@ const EmailLogin: React.FC = () => {
           localStorage.setItem('token', response.data.data.token);
           localStorage.setItem('isLoggedIn', 'true');
           localStorage.setItem('username', response.data.data.user.name);
+          localStorage.setItem('userEmail', email);
+          localStorage.setItem('userPhone', phone);
           setMessage('Login successful!');
           
           // Redirect to home page after successful login
@@ -555,21 +563,22 @@ const EmailLogin: React.FC = () => {
                 </svg>
               </div>
               <h3 className="text-xl font-semibold text-gray-800 mb-2">Check Your Email</h3>
-              <p className="text-gray-600">We've sent a verification email to <strong>{email}</strong>. Please check your inbox (and spam folder) and click the verification link.</p>
+              <p className="text-gray-600">We've sent a verification email to <strong>{email}</strong>. Please check your inbox (and spam folder) and click the verification link to activate your account.</p>
+              <p className="text-gray-500 text-sm mt-2">After verification, you can login with your email and password.</p>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={handleBack}
-                className="py-3 px-4 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition"
-              >
-                Back
-              </button>
+            <div className="grid grid-cols-1 gap-3">
               <button
                 onClick={() => setStep('login')}
                 className="py-3 px-4 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
               >
                 Continue to Login
+              </button>
+              <button
+                onClick={handleBack}
+                className="py-3 px-4 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition"
+              >
+                Back to Signup
               </button>
             </div>
           </div>

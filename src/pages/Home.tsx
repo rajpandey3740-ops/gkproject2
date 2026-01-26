@@ -244,7 +244,7 @@ const Home: React.FC = () => {
               </button>
             </div>
 
-            {/* Login, Cart and Menu Buttons */}
+            {/* Login, Signup, Cart and Menu Buttons */}
             <div className="flex items-center gap-2 md:gap-3 w-full lg:w-auto justify-center lg:justify-end">
               {isLoggedIn ? (
                 <button
@@ -256,13 +256,23 @@ const Home: React.FC = () => {
                   <span className="sm:hidden">User</span>
                 </button>
               ) : (
-                <Link
-                  to="/login"
-                  className="bg-white text-purple-600 px-4 md:px-6 py-2 md:py-3 rounded-full font-semibold hover:bg-purple-50 transition-all shadow-lg text-sm md:text-base whitespace-nowrap"
-                >
-                  <i className="fas fa-user mr-1 md:mr-2"></i>
-                  Login
-                </Link>
+                <div className="flex gap-2">
+                  <Link
+                    to="/login"
+                    className="bg-white text-purple-600 px-4 md:px-6 py-2 md:py-3 rounded-full font-semibold hover:bg-purple-50 transition-all shadow-lg text-sm md:text-base whitespace-nowrap"
+                  >
+                    <i className="fas fa-user mr-1 md:mr-2"></i>
+                    Login
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="bg-green-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-full font-semibold hover:bg-green-700 transition-all shadow-lg text-sm md:text-base whitespace-nowrap"
+                  >
+                    <i className="fas fa-user-plus mr-1 md:mr-2"></i>
+                    <span className="hidden xs:inline">Sign Up</span>
+                    <span className="xs:hidden">Join</span>
+                  </Link>
+                </div>
               )}
               <button
                 onClick={() => setShowCart(true)}
