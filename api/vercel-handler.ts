@@ -90,6 +90,8 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
       handleCategories(req, res, pathParts);
     } else if (pathParts[0] === 'orders') {
       handleOrders(req, res, pathParts);
+    } else if (pathParts[0] === 'auth') {
+      handleAuth(req, res, pathParts);
     } else if (pathParts[0] === 'health') {
       res.status(200).json({
         success: true,
@@ -108,6 +110,148 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
     res.status(500).json({
       success: false,
       error: 'Internal server error'
+    });
+  }
+}
+
+function handleAuth(req: VercelRequest, res: VercelResponse, path: string[]): void {
+  try {
+    if (req.method === 'POST' && path[1] === 'login' && path[2] === 'request-otp') {
+      // Mock OTP generation for development
+      const { phone } = req.body;
+      
+      if (!phone || phone.length !== 10) {
+        res.status(400).json({
+          success: false,
+          error: 'Valid 10-digit phone number is required'
+        });
+        return;
+      }
+      
+      // Generate mock OTP for development
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      console.log(`Generated OTP for ${phone}: ${otp}`);
+      
+      res.status(200).json({
+        success: true,
+        message: 'OTP sent successfully',
+        ...(process.env.NODE_ENV === 'development' && { otp }) // Include OTP in development
+      });
+    } else if (req.method === 'POST' && path[1] === 'signup' && path[2] === 'request-otp') {
+      // Mock OTP generation for signup
+      const { phone } = req.body;
+      
+      if (!phone || phone.length !== 10) {
+        res.status(400).json({
+          success: false,
+          error: 'Valid 10-digit phone number is required'
+        });
+        return;
+      }
+      
+      // Generate mock OTP for development
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      console.log(`Generated OTP for ${phone}: ${otp}`);
+      
+      res.status(200).json({
+        success: true,
+        message: 'OTP sent successfully',
+        ...(process.env.NODE_ENV === 'development' && { otp }) // Include OTP in development
+      });
+    } else if (req.method === 'POST' && path[1] === 'login') {
+      // Mock login with OTP verification
+      const { phone, otp } = req.body;
+      
+      if (!phone || !otp) {
+        res.status(400).json({
+          success: false,
+          error: 'Phone number and OTP are required'
+        });
+        return;
+      }
+      
+      // In a real app, you would verify the OTP here
+      // For demo purposes, we'll accept any 6-digit OTP
+      if (otp.length !== 6 || !/\d{6}/.test(otp)) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid OTP format'
+        });
+        return;
+      }
+      
+      // Mock successful login
+      const mockUser = {
+        id: Date.now(),
+        phone,
+        name: `User ${phone.substring(6)}`, // Just for demo
+        createdAt: new Date().toISOString()
+      };
+      
+      // Generate mock token
+      const token = `mock_token_${phone}_${Date.now()}`;
+      
+      res.status(200).json({
+        success: true,
+        message: 'Login successful',
+        data: {
+          token,
+          user: mockUser
+        }
+      });
+    } else if (req.method === 'POST' && path[1] === 'signup') {
+      // Mock signup with OTP verification
+      const { name, phone, password, otp } = req.body;
+      
+      if (!name || !phone || !password || !otp) {
+        res.status(400).json({
+          success: false,
+          error: 'Name, phone, password, and OTP are required'
+        });
+        return;
+      }
+      
+      // Validate phone and OTP
+      if (phone.length !== 10 || otp.length !== 6 || !/\d{6}/.test(otp)) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid phone or OTP format'
+        });
+        return;
+      }
+      
+      // Mock successful signup
+      const mockUser = {
+        id: Date.now(),
+        phone,
+        name,
+        createdAt: new Date().toISOString()
+      };
+      
+      // Generate mock token
+      const token = `mock_token_${phone}_${Date.now()}`;
+      
+      res.status(200).json({
+        success: true,
+        message: 'Signup successful',
+        data: {
+          token,
+          user: mockUser
+        }
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        error: 'Auth endpoint not found'
+      });
+    }
+  } catch (error) {
+    console.error('Auth API Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to process auth request'
     });
   }
 }

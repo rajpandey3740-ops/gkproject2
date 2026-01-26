@@ -8,18 +8,33 @@ const OwnerLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    // Hardcoded credentials
-    if (phone === '6264856033' && password === 'SaurabhGk78040@') {
-      // Store owner authentication
-      localStorage.setItem('ownerAuthenticated', 'true');
-      localStorage.setItem('ownerPhone', phone);
-      navigate('/owner/dashboard');
-    } else {
-      setError('Invalid phone number or password');
+    try {
+      const response = await fetch('/api/auth/owner/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phone, password }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Store authentication token and user info
+        localStorage.setItem('ownerToken', data.data.token);
+        localStorage.setItem('ownerAuthenticated', 'true');
+        localStorage.setItem('ownerPhone', data.data.user.phone);
+        navigate('/owner/dashboard');
+      } else {
+        setError(data.error || 'Invalid phone number or password');
+      }
+    } catch (err) {
+      setError('An error occurred during login. Please try again.');
+      console.error('Owner login error:', err);
     }
   };
 

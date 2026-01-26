@@ -1,10 +1,14 @@
 import * as dotenv from 'dotenv';
 import { createApp } from './config/app';
 import { connectDatabase } from './config/database';
+import { initializeFirebase } from './config/firebase';
 import { logger } from './utils/logger';
 
 // Load environment variables
 dotenv.config();
+
+// Initialize Firebase
+initializeFirebase();
 
 // Create the Express app instance
 const app = createApp();

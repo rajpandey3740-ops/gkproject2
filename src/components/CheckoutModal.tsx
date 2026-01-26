@@ -3,7 +3,8 @@ import axios from 'axios';
 import { CartItem, Address } from '../types';
 import AddressModal from './AddressModal';
 
-const API_BASE_URL = '/api';
+// Use relative URLs for Vercel deployment or environment variable for local development
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 interface CheckoutModalProps {
   cart: CartItem[];
@@ -44,6 +45,18 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
       return;
     }
 
+    // Check if any items in cart are out of stock
+    const outOfStockItems = cart.filter(item => item.inStock === false);
+    if (outOfStockItems.length > 0) {
+      const outOfStockNames = outOfStockItems.map(item => `• ${item.name}`).join('\n');
+      alert(`Cannot place order. The following items are out of stock:
+
+${outOfStockNames}
+
+Please remove these items from your cart and try again.`);
+      return;
+    }
+
     setIsPlacingOrder(true);
 
     try {
@@ -61,7 +74,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
         image: item.image,
         unit: item.unit,
         type: typeof item.id,
-        hasRequiredFields: !!(item.id && item.name && typeof item.price === 'number' && typeof item.originalPrice === 'number' && typeof item.quantity === 'number')
+        hasRequiredFields: !!(item.id && item.name && typeof item.price === 'number' && typeof item.originalPrice === 'number' && typeof item.quantity === 'number'),
+        inStock: item.inStock
       })));
 
       // Prepare order data
@@ -170,6 +184,11 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           <p className="text-xs text-gray-600">
                             {item.unit} × {item.quantity}
                           </p>
+                          {item.inStock === false && (
+                            <p className="text-xs text-red-500 font-semibold mt-1">
+                              <i className="fas fa-exclamation-triangle mr-1"></i>Out of Stock
+                            </p>
+                          )}
                         </div>
                       </div>
                       <p className="font-bold text-purple-600">

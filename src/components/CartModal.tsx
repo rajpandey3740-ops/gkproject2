@@ -55,6 +55,11 @@ const CartModal: React.FC<CartModalProps> = ({
                     <p className="font-semibold text-sm truncate">{item.name}</p>
                     <p className="text-xs text-gray-500">{item.unit}</p>
                     <p className="font-bold text-purple-600">₹{item.price}</p>
+                    {item.inStock === false && (
+                      <p className="text-xs text-red-500 font-semibold mt-1">
+                        <i className="fas fa-exclamation-triangle mr-1"></i>Out of Stock
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center space-x-2 flex-shrink-0">
                     <button

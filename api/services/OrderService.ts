@@ -2,9 +2,6 @@ import { Order } from '../models/Order';
 import OrderModel from '../models/OrderModel';
 import mongoose from 'mongoose';
 
-// In-memory orders storage for when MongoDB is not available
-let inMemoryOrders: Order[] = [];
-
 export class OrderService {
   /**
    * Check if MongoDB is connected
@@ -38,12 +35,6 @@ export class OrderService {
         updatedAt: now
       };
 
-      // Use in-memory storage if MongoDB is not connected
-      if (!this.isMongoConnected()) {
-        inMemoryOrders.unshift(newOrder);
-        return newOrder;
-      }
-
       const order = new OrderModel(newOrder);
       await order.save();
       return order.toObject() as Order;
@@ -58,14 +49,6 @@ export class OrderService {
    */
   async getAllOrders(username?: string): Promise<Order[]> {
     try {
-      // Use in-memory storage if MongoDB is not connected
-      if (!this.isMongoConnected()) {
-        if (username) {
-          return inMemoryOrders.filter(order => order.username === username);
-        }
-        return inMemoryOrders;
-      }
-
       const query = username ? { username } : {};
       const orders = await OrderModel.find(query).sort({ createdAt: -1 }).lean();
       return orders as Order[];
@@ -80,11 +63,6 @@ export class OrderService {
    */
   async getOrderById(orderId: string): Promise<Order | null> {
     try {
-      // Use in-memory storage if MongoDB is not connected
-      if (!this.isMongoConnected()) {
-        return inMemoryOrders.find(order => order.orderId === orderId) || null;
-      }
-
       const order = await OrderModel.findOne({ orderId }).lean();
       return order as Order | null;
     } catch (error) {
@@ -98,20 +76,6 @@ export class OrderService {
    */
   async updateOrderStatus(orderId: string, status: Order['status']): Promise<Order | null> {
     try {
-      // Use in-memory storage if MongoDB is not connected
-      if (!this.isMongoConnected()) {
-        const orderIndex = inMemoryOrders.findIndex(order => order.orderId === orderId);
-        if (orderIndex !== -1) {
-          inMemoryOrders[orderIndex] = {
-            ...inMemoryOrders[orderIndex],
-            status,
-            updatedAt: new Date()
-          };
-          return inMemoryOrders[orderIndex];
-        }
-        return null;
-      }
-
       const order = await OrderModel.findOneAndUpdate(
         { orderId },
         { status, updatedAt: new Date() },

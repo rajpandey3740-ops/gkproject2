@@ -6,8 +6,8 @@ import ProductCard from '../components/ProductCard';
 import CartModal from '../components/CartModal';
 import CheckoutModal from '../components/CheckoutModal';
 
-// Use relative URLs for Vercel deployment
-const API_BASE_URL = '/api';
+// Use relative URLs for Vercel deployment or environment variable for local development
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -56,17 +56,28 @@ const Home: React.FC = () => {
         axios.get(`${API_BASE_URL}/categories`)
       ]);
 
-      if (productsRes.data.success) {
+      console.log('Products response:', productsRes.data);
+      console.log('Categories response:', categoriesRes.data);
+
+      if (productsRes.data.success && productsRes.data.data) {
         setProducts(productsRes.data.data);
         setFilteredProducts(productsRes.data.data);
+        console.log(`Loaded ${productsRes.data.data.length} products`);
+      } else {
+        console.error('Products response missing success or data:', productsRes.data);
+        setError('Products data format is incorrect');
       }
 
-      if (categoriesRes.data.success) {
+      if (categoriesRes.data.success && categoriesRes.data.data) {
         setCategories(categoriesRes.data.data);
+        console.log(`Loaded ${categoriesRes.data.data.length} categories`);
+      } else {
+        console.error('Categories response missing success or data:', categoriesRes.data);
       }
     } catch (err: any) {
       console.error('Error fetching data:', err);
-      setError('Failed to load products. Please try again later.');
+      console.error('Error details:', err.response?.data || err.message);
+      setError(`Failed to load products: ${err.response?.data?.error || err.message || 'Please try again later.'}`);
     } finally {
       setIsLoading(false);
     }
@@ -95,6 +106,12 @@ const Home: React.FC = () => {
   const addToCart = (productId: number) => {
     const product = products.find(p => p.id === productId);
     if (!product) return;
+
+    // Check if product is in stock
+    if (product.inStock === false) {
+      alert(`${product.name} is currently out of stock!`);
+      return;
+    }
 
     const existingItem = cart.find(item => item.id === productId);
     let newCart: CartItem[];
@@ -133,13 +150,25 @@ const Home: React.FC = () => {
   };
 
   const handleLogout = () => {
+    console.log('Logout function called');
     if (confirm('Are you sure you want to logout?')) {
-      localStorage.removeItem('isLoggedIn');
-      localStorage.removeItem('username');
-      localStorage.removeItem('rememberMe');
-      setIsLoggedIn(false);
-      setUsername('');
-      setShowMenu(false);
+      console.log('Logout confirmed');
+      try {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('username');
+        localStorage.removeItem('rememberMe');
+        localStorage.removeItem('token');
+        localStorage.removeItem('userData');
+        setIsLoggedIn(false);
+        setUsername('');
+        setShowMenu(false);
+        console.log('Logout completed successfully');
+      } catch (error) {
+        console.error('Error during logout:', error);
+        alert('Error during logout. Please try again.');
+      }
+    } else {
+      console.log('Logout cancelled');
     }
   };
 

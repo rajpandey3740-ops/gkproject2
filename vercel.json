@@ -8,15 +8,19 @@
       "destination": "/api/vercel-handler.ts"
     },
     {
-      "source": "/api/products/:id*",
+      "source": "/api/products/:path*",
       "destination": "/api/vercel-handler.ts"
     },
     {
-      "source": "/api/categories/:id*",
+      "source": "/api/categories/:path*",
       "destination": "/api/vercel-handler.ts"
     },
     {
-      "source": "/api/orders/:id*",
+      "source": "/api/orders/:path*",
+      "destination": "/api/vercel-handler.ts"
+    },
+    {
+      "source": "/api/auth/:path*",
       "destination": "/api/vercel-handler.ts"
     },
     {

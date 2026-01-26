@@ -4,6 +4,9 @@ import { logger } from '../utils/logger';
 export const connectDatabase = async (): Promise<void> => {
   const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/gkshop';
   
+  // Log the connection string (without credentials) for debugging
+  logger.info(`Attempting to connect to MongoDB: ${mongoURI.replace(/\/\/.*@/, '//****:****@')}`);
+  
   try {
     // Check if we're using MongoDB Atlas (cloud)
     const isAtlas = mongoURI.includes('mongodb+srv');
@@ -41,7 +44,7 @@ export const connectDatabase = async (): Promise<void> => {
   } catch (error) {
     logger.error('Failed to connect to MongoDB:');
     logger.error(error instanceof Error ? error.message : String(error));
-    logger.warn('⚠️  Falling back to in-memory data storage');
-    throw error;
+    logger.error('❌ CRITICAL: MongoDB Atlas connection failed - exiting application');
+    process.exit(1); // Exit the application if MongoDB connection fails
   }
 };

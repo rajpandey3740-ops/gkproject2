@@ -24,7 +24,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <img
             src={product.image}
             alt={product.name}
-            className="w-full h-full object-contain p-4"
+            className="w-full h-full object-cover p-4"
+            loading="lazy"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80";
+              target.alt = "Product image not available";
+            }}
           />
         </div>
         {discountAmount > 0 && (
@@ -35,6 +41,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
         {product.popular && (
           <div className="badge-popular absolute top-3 left-3 text-white px-3 py-1 rounded-full text-xs font-bold">
             ⭐ POPULAR
+          </div>
+        )}
+        {product.inStock === false && (
+          <div className="absolute bottom-3 left-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+            OUT OF STOCK
           </div>
         )}
       </div>
@@ -70,9 +81,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
         ) : (
           <button
             onClick={() => onAddToCart(product.id)}
-            className="w-full gradient-bg text-white py-3 rounded-xl font-semibold hover:opacity-90 transition-all shadow-md"
+            disabled={product.inStock === false}
+            className={`w-full py-3 rounded-xl font-semibold transition-all shadow-md ${
+              product.inStock === false 
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                : 'gradient-bg text-white hover:opacity-90'
+            }`}
           >
-            <i className="fas fa-plus mr-2"></i>Add to Cart
+            {product.inStock === false ? (
+              <>
+                <i className="fas fa-times mr-2"></i>Out of Stock
+              </>
+            ) : (
+              <>
+                <i className="fas fa-plus mr-2"></i>Add to Cart
+              </>
+            )}
           </button>
         )}
       </div>

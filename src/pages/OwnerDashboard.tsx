@@ -73,9 +73,17 @@ const OwnerDashboard = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('ownerAuthenticated');
-    localStorage.removeItem('ownerPhone');
-    navigate('/');
+    console.log('Owner logout function called');
+    try {
+      localStorage.removeItem('ownerAuthenticated');
+      localStorage.removeItem('ownerPhone');
+      localStorage.removeItem('ownerToken');
+      console.log('Owner logout completed, redirecting to home');
+      navigate('/');
+    } catch (error) {
+      console.error('Error during owner logout:', error);
+      alert('Error during logout. Please try again.');
+    }
   };
 
   const toggleStock = async (product: Product) => {
@@ -218,6 +226,7 @@ const OwnerDashboard = () => {
         }
         break;
       case 'logout':
+        console.log('Logout menu action triggered');
         handleLogout();
         break;
       default:

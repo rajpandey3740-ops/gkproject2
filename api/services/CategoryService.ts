@@ -1,6 +1,5 @@
 import { Category } from '../models/Product';
 import CategoryModel from '../models/CategoryModel';
-import { categories as inMemoryCategories } from '../data/categoriesData';
 import mongoose from 'mongoose';
 
 export class CategoryService {
@@ -16,17 +15,6 @@ export class CategoryService {
    */
   async getAllCategories(includeAll: boolean = true): Promise<Category[]> {
     try {
-      // Use in-memory data if MongoDB is not connected
-      if (!this.isMongoConnected()) {
-        if (includeAll) {
-          return [
-            { id: 'all', name: 'All Products', icon: '🛒' },
-            ...inMemoryCategories
-          ];
-        }
-        return inMemoryCategories;
-      }
-      
       const categories = await CategoryModel.find().lean();
       
       if (includeAll) {
@@ -51,11 +39,6 @@ export class CategoryService {
         return { id: 'all', name: 'All Products', icon: '🛒' };
       }
       
-      // Use in-memory data if MongoDB is not connected
-      if (!this.isMongoConnected()) {
-        return inMemoryCategories.find(c => c.id === id) || null;
-      }
-      
       const category = await CategoryModel.findOne({ id }).lean();
       return category as Category | null;
     } catch (error) {
@@ -70,11 +53,6 @@ export class CategoryService {
   async categoryExists(id: string): Promise<boolean> {
     try {
       if (id === 'all') return true;
-      
-      // Use in-memory data if MongoDB is not connected
-      if (!this.isMongoConnected()) {
-        return inMemoryCategories.some(c => c.id === id);
-      }
       
       const count = await CategoryModel.countDocuments({ id });
       return count > 0;

@@ -1,6 +1,5 @@
 import { Product } from '../models/Product';
 import ProductModel from '../models/ProductModel';
-import { products as inMemoryProducts } from '../data/productsData';
 import mongoose from 'mongoose';
 
 export class ProductService {
@@ -25,26 +24,6 @@ export class ProductService {
    */
   async getAllProducts(category?: string, search?: string): Promise<Product[]> {
     try {
-      // Use in-memory data if MongoDB is not connected
-      if (!this.isMongoConnected()) {
-        let filtered = [...inMemoryProducts];
-        
-        if (category && category !== 'all') {
-          filtered = filtered.filter(p => p.category === category);
-        }
-        
-        if (search) {
-          const searchLower = search.toLowerCase();
-          filtered = filtered.filter(p => 
-            p.name.toLowerCase().includes(searchLower) ||
-            p.description.toLowerCase().includes(searchLower) ||
-            p.category.toLowerCase().includes(searchLower)
-          );
-        }
-        
-        return filtered;
-      }
-      
       let query: any = {};
       
       if (category && category !== 'all') {
@@ -72,11 +51,6 @@ export class ProductService {
    */
   async getProductById(id: number): Promise<Product | null> {
     try {
-      // Use in-memory data if MongoDB is not connected
-      if (!this.isMongoConnected()) {
-        return inMemoryProducts.find(p => p.id === id) || null;
-      }
-      
       const product = await ProductModel.findOne({ id }).lean();
       return product as Product | null;
     } catch (error) {
@@ -90,11 +64,6 @@ export class ProductService {
    */
   async getProductsByCategory(category: string): Promise<Product[]> {
     try {
-      // Use in-memory data if MongoDB is not connected
-      if (!this.isMongoConnected()) {
-        return inMemoryProducts.filter(p => p.category === category);
-      }
-      
       const products = await ProductModel.find({ category }).lean();
       return products as Product[];
     } catch (error) {
@@ -108,15 +77,6 @@ export class ProductService {
    */
   async searchProducts(query: string): Promise<Product[]> {
     try {
-      // Use in-memory data if MongoDB is not connected
-      if (!this.isMongoConnected()) {
-        const searchLower = query.toLowerCase();
-        return inMemoryProducts.filter(p => 
-          p.name.toLowerCase().includes(searchLower) ||
-          p.description.toLowerCase().includes(searchLower)
-        );
-      }
-      
       const products = await ProductModel.find({
         $or: [
           { name: { $regex: query, $options: 'i' } },
@@ -135,13 +95,6 @@ export class ProductService {
    */
   async getFeaturedProducts(limit: number = 10): Promise<Product[]> {
     try {
-      // Use in-memory data if MongoDB is not connected
-      if (!this.isMongoConnected()) {
-        return [...inMemoryProducts]
-          .sort((a, b) => b.discount - a.discount)
-          .slice(0, limit);
-      }
-      
       const products = await ProductModel.find()
         .sort({ discount: -1 })
         .limit(limit)
@@ -167,29 +120,6 @@ export class ProductService {
         }
       }
 
-      // Use in-memory storage if MongoDB is not connected
-      if (!this.isMongoConnected()) {
-        // Generate ID if not provided
-        const id = productData.id || this.generateProductId();
-        
-        // Ensure all required fields are present
-        const newProduct: Product = {
-          id,
-          name: productData.name || '',
-          category: productData.category || '',
-          price: productData.price || 0,
-          originalPrice: productData.originalPrice || 0,
-          discount: productData.discount || 0,
-          image: productData.image || '',
-          description: productData.description || '',
-          unit: productData.unit || 'pcs',
-          inStock: productData.inStock !== undefined ? productData.inStock : true
-        };
-        
-        inMemoryProducts.unshift(newProduct);
-        return newProduct;
-      }
-      
       // Generate ID if not provided
       const id = productData.id || this.generateProductId();
       
@@ -230,19 +160,6 @@ export class ProductService {
         }
       }
 
-      // Use in-memory storage if MongoDB is not connected
-      if (!this.isMongoConnected()) {
-        const productIndex = inMemoryProducts.findIndex(p => p.id === id);
-        if (productIndex !== -1) {
-          inMemoryProducts[productIndex] = {
-            ...inMemoryProducts[productIndex],
-            ...productData
-          };
-          return inMemoryProducts[productIndex];
-        }
-        return null;
-      }
-
       const product = await ProductModel.findOneAndUpdate(
         { id },
         productData,
@@ -260,15 +177,6 @@ export class ProductService {
    */
   async deleteProduct(id: number): Promise<boolean> {
     try {
-      // Use in-memory storage if MongoDB is not connected
-      if (!this.isMongoConnected()) {
-        const index = inMemoryProducts.findIndex(p => p.id === id);
-        if (index === -1) return false;
-        
-        inMemoryProducts.splice(index, 1);
-        return true;
-      }
-      
       const result = await ProductModel.deleteOne({ id });
       return result.deletedCount > 0;
     } catch (error) {

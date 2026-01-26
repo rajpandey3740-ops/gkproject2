@@ -4,6 +4,7 @@ import cors from 'cors';
 import productRoutes from '../routes/productRoutes';
 import categoryRoutes from '../routes/categoryRoutes';
 import orderRoutes from '../routes/orderRoutes';
+import authRoutes from '../routes/authRoutes';
 
 export function createApp(): Application {
   const app = express();
@@ -41,6 +42,7 @@ export function createApp(): Application {
   app.use('/api/products', productRoutes);
   app.use('/api/categories', categoryRoutes);
   app.use('/api/orders', orderRoutes);
+  app.use('/api/auth', authRoutes);
 
   // 404 handler
   app.use((_req: Request, res: Response) => {
