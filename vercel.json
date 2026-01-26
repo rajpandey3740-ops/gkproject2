@@ -5,27 +5,27 @@
   "rewrites": [
     {
       "source": "/api/health",
-      "destination": "/api/vercel-handler.ts"
+      "destination": "/api/vercel-handler"
     },
     {
       "source": "/api/products/:path*",
-      "destination": "/api/vercel-handler.ts"
+      "destination": "/api/vercel-handler"
     },
     {
       "source": "/api/categories/:path*",
-      "destination": "/api/vercel-handler.ts"
+      "destination": "/api/vercel-handler"
     },
     {
       "source": "/api/orders/:path*",
-      "destination": "/api/vercel-handler.ts"
+      "destination": "/api/vercel-handler"
     },
     {
       "source": "/api/auth/:path*",
-      "destination": "/api/vercel-handler.ts"
+      "destination": "/api/vercel-handler"
     },
     {
       "source": "/api/(.*)",
-      "destination": "/api/vercel-handler.ts"
+      "destination": "/api/vercel-handler"
     },
     {
       "source": "/(.*)",
@@ -54,12 +54,8 @@
   "functions": {
     "api/vercel-handler.ts": {
       "runtime": "@vercel/node@5.5.4",
+      "memory": 128,
       "maxDuration": 10
-    }
-  },
-  "build": {
-    "env": {
-      "NODE_VERSION": "20.18.0"
     }
   }
 }
