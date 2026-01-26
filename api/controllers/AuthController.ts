@@ -687,7 +687,7 @@ export class AuthController {
         message: 'Password reset successful. You can now login with your new password.',
       });
     } catch (error: any) {
-      logger.error('Password reset error:', error);
+      Logger.error('Password reset error:', error);
       return res.status(500).json({
         success: false,
         error: 'Password reset failed',
@@ -751,11 +751,11 @@ export class AuthController {
 
       // For Firebase-only approach, we'll let the frontend handle email verification
       // Just create the user in our database
-      logger.info(`User registered with email: ${email}. Email verification will be handled by Firebase client SDK.`);
+      Logger.info(`User registered with email: ${email}. Email verification will be handled by Firebase client SDK.`);
 
       // Skip email sending since we're using Firebase-only approach
       // Email verification is handled by Firebase client SDK
-      logger.info(`Skipping email service - using Firebase client SDK for verification`);
+      Logger.info(`Skipping email service - using Firebase client SDK for verification`);
 
       return res.json({
         success: true,
@@ -764,7 +764,7 @@ export class AuthController {
         ...(process.env.NODE_ENV === 'development' && { code: verificationCode }), // Only in development
       });
     } catch (error: any) {
-      logger.error('Request email verification error:', error);
+      Logger.error('Request email verification error:', error);
       return res.status(500).json({
         success: false,
         error: 'Failed to send verification email',
@@ -850,7 +850,7 @@ export class AuthController {
         },
       });
     } catch (error: any) {
-      logger.error('Email verification error:', error);
+      Logger.error('Email verification error:', error);
       return res.status(500).json({
         success: false,
         error: 'Email verification failed',
@@ -932,7 +932,7 @@ export class AuthController {
         },
       });
     } catch (error: any) {
-      logger.error('Email login error:', error);
+      Logger.error('Email login error:', error);
       return res.status(500).json({
         success: false,
         error: 'Login failed',
@@ -994,7 +994,7 @@ export class AuthController {
         ...(process.env.NODE_ENV === 'development' && { code: resetCode }), // Only in development
       });
     } catch (error: any) {
-      logger.error('Request email password reset error:', error);
+      Logger.error('Request email password reset error:', error);
       return res.status(500).json({
         success: false,
         error: 'Failed to send password reset email',
@@ -1062,7 +1062,7 @@ export class AuthController {
         message: 'Password reset successful. You can now login with your new password.',
       });
     } catch (error: any) {
-      logger.error('Password reset error:', error);
+      Logger.error('Password reset error:', error);
       return res.status(500).json({
         success: false,
         error: 'Password reset failed',
@@ -1101,7 +1101,7 @@ export class AuthController {
       const ownerPassword = process.env.OWNER_PASSWORD;
 
       if (!ownerPhone || !ownerPassword) {
-        logger.error('Owner credentials not configured in environment variables');
+        Logger.error('Owner credentials not configured in environment variables');
         return res.status(500).json({
           success: false,
           error: 'Owner credentials not configured',
@@ -1140,7 +1140,7 @@ export class AuthController {
         });
       }
     } catch (error: any) {
-      logger.error('Owner login error:', error);
+      Logger.error('Owner login error:', error);
       return res.status(500).json({
         success: false,
         error: 'Owner login failed',
