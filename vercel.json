@@ -57,5 +57,6 @@
       "memory": 128,
       "maxDuration": 10
     }
-  }
+  },
+  "nodeVersion": "20.x"
 }
