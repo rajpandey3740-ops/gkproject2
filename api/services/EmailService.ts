@@ -1,5 +1,5 @@
 import * as nodemailer from 'nodemailer';
-import { logger } from '../utils/logger';
+import { Logger } from '../utils/logger';
 
 interface EmailOptions {
   to: string;
@@ -30,7 +30,7 @@ export class EmailService {
       } else if (emailService === 'firebase') {
         // Using Firebase for authentication - emails handled by Firebase internally
         // Return early since Firebase handles email verification internally
-        logger.info('Using Firebase for authentication - email verification handled internally');
+        Logger.info('Using Firebase for authentication - email verification handled internally');
         return true;
       } else {
         // Using Ethereal.email (completely free, no setup required)
@@ -45,7 +45,7 @@ export class EmailService {
           },
         });
         
-        logger.info('Ethereal.email test account created:', {
+        Logger.info('Ethereal.email test account created:', {
           user: testAccount.user,
           pass: testAccount.pass,
           web: testAccount.web,
@@ -59,7 +59,7 @@ export class EmailService {
     
     // If using Firebase, we don't need to send emails manually
     if (emailService === 'firebase') {
-      logger.info('Email service set to Firebase - skipping manual email sending');
+      Logger.info('Email service set to Firebase - skipping manual email sending');
       return true; // Return true as Firebase handles email internally
     }
     
@@ -75,16 +75,16 @@ export class EmailService {
       };
 
       const info = await this.transporter.sendMail(mailOptions);
-      logger.info('Email sent successfully:', info.messageId);
+      Logger.info('Email sent successfully:', info.messageId);
       
       // For Ethereal.email, you can preview the email
       if (process.env.EMAIL_SERVICE === 'ethereal') {
-        logger.info('Preview URL:', nodemailer.getTestMessageUrl(info));
+        Logger.info('Preview URL:', nodemailer.getTestMessageUrl(info));
       }
       
       return true;
     } catch (error) {
-      logger.error('Email sending failed:', error);
+      Logger.error('Email sending failed:', error);
       return false;
     }
   }

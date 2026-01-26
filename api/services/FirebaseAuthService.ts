@@ -1,5 +1,5 @@
 import { getFirebaseAdmin, verifyIdToken } from '../config/firebase';
-import { logger } from '../utils/logger';
+import { Logger } from '../utils/logger';
 import * as admin from 'firebase-admin';
 
 export class FirebaseAuthService {
@@ -30,7 +30,7 @@ export class FirebaseAuthService {
         phone: decodedToken.phone_number,
       };
     } catch (error: any) {
-      logger.error('Firebase ID token verification failed:', error.message);
+      Logger.error('Firebase ID token verification failed:', error.message);
       return {
         success: false,
         error: error.message || 'Invalid token',
@@ -59,7 +59,7 @@ export class FirebaseAuthService {
       if (error.code === 'auth/user-not-found') {
         return null;
       }
-      logger.error('Error getting user by phone:', error.message);
+      Logger.error('Error getting user by phone:', error.message);
       return null;
     }
   }
@@ -78,7 +78,7 @@ export class FirebaseAuthService {
       const customToken = await firebaseAdmin.auth().createCustomToken(uid, additionalClaims);
       return customToken;
     } catch (error: any) {
-      logger.error('Error creating custom token:', error.message);
+      Logger.error('Error creating custom token:', error.message);
       return null;
     }
   }

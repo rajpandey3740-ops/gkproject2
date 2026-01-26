@@ -4,7 +4,7 @@ import UserModel, { IUser } from '../models/UserModel';
 import { OTPService } from '../services/OTPService';
 import { FirebaseAuthService } from '../services/FirebaseAuthService';
 import { EmailService } from '../services/EmailService';
-import { logger } from '../utils/logger';
+import { Logger } from '../utils/logger';
 import { getFirebaseAdmin } from '../config/firebase';
 
 const JWT_SECRET: string = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
@@ -59,7 +59,7 @@ export class AuthController {
         ...(otpResult.otp && { otp: otpResult.otp }), // Only in development
       });
     } catch (error: any) {
-      logger.error('Request signup OTP error:', error);
+      Logger.error('Request signup OTP error:', error);
       return res.status(500).json({
         success: false,
         error: 'Failed to send OTP',
@@ -137,7 +137,7 @@ export class AuthController {
         };
         token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
       } catch (error) {
-        logger.error('JWT signing failed:', error);
+        Logger.error('JWT signing failed:', error);
         return res.status(500).json({
           success: false,
           error: 'Token generation failed',
@@ -158,7 +158,7 @@ export class AuthController {
         },
       });
     } catch (error: any) {
-      logger.error('Registration error:', error);
+      Logger.error('Registration error:', error);
       
       // Handle duplicate phone number error
       if (error.code === 11000 || error.keyPattern?.phone) {
@@ -224,7 +224,7 @@ export class AuthController {
         ...(otpResult.otp && { otp: otpResult.otp }), // Only in development
       });
     } catch (error: any) {
-      logger.error('Request login OTP error:', error);
+      Logger.error('Request login OTP error:', error);
       return res.status(500).json({
         success: false,
         error: 'Failed to send OTP',
@@ -299,7 +299,7 @@ export class AuthController {
         },
       });
     } catch (error: any) {
-      logger.error('OTP verification error:', error);
+      Logger.error('OTP verification error:', error);
       return res.status(500).json({
         success: false,
         error: 'OTP verification failed',
@@ -347,7 +347,7 @@ export class AuthController {
           isVerified: true,
         });
         await user.save();
-        logger.info(`New user created via Firebase: ${phone}`);
+        Logger.info(`New user created via Firebase: ${phone}`);
       } else {
         // Update verification status
         user.isVerified = true;
@@ -378,7 +378,7 @@ export class AuthController {
         },
       });
     } catch (error: any) {
-      logger.error('Firebase token verification error:', error);
+      Logger.error('Firebase token verification error:', error);
       return res.status(500).json({
         success: false,
         error: 'Authentication failed',
@@ -414,7 +414,7 @@ export class AuthController {
       try {
         decodedToken = await firebaseAdmin.auth().verifyIdToken(idToken);
       } catch (error: any) {
-        logger.error('Firebase ID token verification failed:', error.message);
+        Logger.error('Firebase ID token verification failed:', error.message);
         return res.status(401).json({
           success: false,
           error: 'Invalid Firebase token',
@@ -446,7 +446,7 @@ export class AuthController {
           emailVerified: emailVerified,
         });
         await user.save();
-        logger.info(`New user created via Firebase email: ${email}`);
+        Logger.info(`New user created via Firebase email: ${email}`);
       } else {
         // Update user info if needed
         user.name = name;
@@ -480,7 +480,7 @@ export class AuthController {
         },
       });
     } catch (error: any) {
-      logger.error('Firebase email token verification error:', error);
+      Logger.error('Firebase email token verification error:', error);
       return res.status(500).json({
         success: false,
         error: 'Authentication failed',
@@ -562,7 +562,7 @@ export class AuthController {
         },
       });
     } catch (error: any) {
-      logger.error('Traditional login error:', error);
+      Logger.error('Traditional login error:', error);
       return res.status(500).json({
         success: false,
         error: 'Login failed',
@@ -619,7 +619,7 @@ export class AuthController {
         ...(otpResult.otp && { otp: otpResult.otp }), // Only in development
       });
     } catch (error: any) {
-      logger.error('Request password reset OTP error:', error);
+      Logger.error('Request password reset OTP error:', error);
       return res.status(500).json({
         success: false,
         error: 'Failed to send password reset OTP',

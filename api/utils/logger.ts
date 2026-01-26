@@ -18,4 +18,5 @@ export class Logger {
   }
 }
 
-export const logger = Logger;
+export const logger = new Logger();
+export default Logger;

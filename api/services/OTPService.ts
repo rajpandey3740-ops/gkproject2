@@ -1,4 +1,4 @@
-import { logger } from '../utils/logger';
+import { Logger } from '../utils/logger';
 import twilio from 'twilio';
 
 interface OTPData {
@@ -24,10 +24,10 @@ const SMS_ENABLED = process.env.SMS_ENABLED === 'true' || process.env.SMS_ENABLE
 let twilioClient: twilio.Twilio | null = null;
 if (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && SMS_ENABLED) {
   twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
-  logger.info('✅ Twilio SMS service initialized');
+  Logger.info('✅ Twilio SMS service initialized');
 } else {
-  logger.warn('⚠️  Twilio SMS not configured. OTPs will be logged to console only.');
-  logger.warn('   Set SMS_ENABLED=true and provide TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER');
+  Logger.warn('⚠️  Twilio SMS not configured. OTPs will be logged to console only.');
+  Logger.warn('   Set SMS_ENABLED=true and provide TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER');
 }
 
 export class OTPService {
@@ -53,7 +53,7 @@ export class OTPService {
       otpStore.delete(phone);
     }, OTP_EXPIRY_TIME);
 
-    logger.info(`OTP stored for ${phone} (expires in 10 minutes)`);
+    Logger.info(`OTP stored for ${phone} (expires in 10 minutes)`);
   }
 
   /**
@@ -143,17 +143,17 @@ export class OTPService {
             to: formattedPhone,
           });
 
-          logger.info(`✅ SMS sent successfully to ${formattedPhone}`);
-          logger.info(`   Message SID: ${messageResponse.sid}`);
-          logger.info(`   Status: ${messageResponse.status}`);
+          Logger.info(`✅ SMS sent successfully to ${formattedPhone}`);
+          Logger.info(`   Message SID: ${messageResponse.sid}`);
+          Logger.info(`   Status: ${messageResponse.status}`);
           
           return true;
         } catch (twilioError: any) {
-          logger.error('❌ Twilio SMS sending failed:', twilioError.message);
-          logger.error('   Error code:', twilioError.code);
+          Logger.error('❌ Twilio SMS sending failed:', twilioError.message);
+          Logger.error('   Error code:', twilioError.code);
           
           // Log the OTP in console as fallback
-          logger.warn(`📱 OTP for ${phone}: ${otp} (SMS failed, check console)`);
+          Logger.warn(`📱 OTP for ${phone}: ${otp} (SMS failed, check console)`);
           
           // Return true anyway so user can still verify (OTP is logged)
           // In production, you might want to return false here
@@ -161,10 +161,10 @@ export class OTPService {
         }
       } else {
         // Development mode: Just log to console
-        logger.info(`📱 OTP for ${phone}: ${otp}`);
-        logger.info(`   Formatted: ${formattedPhone}`);
-        logger.warn(`⚠️  SMS not enabled. OTP logged to console only.`);
-        logger.warn(`   To enable SMS: Set SMS_ENABLED=true in .env file`);
+        Logger.info(`📱 OTP for ${phone}: ${otp}`);
+        Logger.info(`   Formatted: ${formattedPhone}`);
+        Logger.warn(`⚠️  SMS not enabled. OTP logged to console only.`);
+        Logger.warn(`   To enable SMS: Set SMS_ENABLED=true in .env file`);
         
         // Simulate sending delay
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -172,9 +172,9 @@ export class OTPService {
         return true;
       }
     } catch (error: any) {
-      logger.error('Error sending OTP:', error);
+      Logger.error('Error sending OTP:', error);
       // Log OTP as fallback
-      logger.warn(`📱 OTP for ${phone}: ${otp} (Error occurred, check console)`);
+      Logger.warn(`📱 OTP for ${phone}: ${otp} (Error occurred, check console)`);
       return true; // Return true so user can still verify
     }
   }

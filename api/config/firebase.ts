@@ -1,5 +1,5 @@
 import * as admin from 'firebase-admin';
-import { logger } from '../utils/logger';
+import { Logger } from '../utils/logger';
 
 // Initialize Firebase Admin SDK
 let firebaseAdmin: admin.app.App | null = null;
@@ -9,7 +9,7 @@ export const initializeFirebase = (): void => {
     // Check if Firebase is already initialized
     if (admin.apps.length > 0) {
       firebaseAdmin = admin.apps[0] as admin.app.App;
-      logger.info('✅ Firebase Admin already initialized');
+      Logger.info('✅ Firebase Admin already initialized');
       return;
     }
 
@@ -17,8 +17,8 @@ export const initializeFirebase = (): void => {
     const projectId = process.env.VITE_FIREBASE_PROJECT_ID;
     
     if (!projectId) {
-      logger.warn('⚠️  Firebase not configured. Phone authentication will use fallback mode.');
-      logger.warn('   Set VITE_FIREBASE_PROJECT_ID in .env file');
+      Logger.warn('⚠️  Firebase not configured. Phone authentication will use fallback mode.');
+      Logger.warn('   Set VITE_FIREBASE_PROJECT_ID in .env file');
       return;
     }
     
@@ -30,15 +30,15 @@ export const initializeFirebase = (): void => {
         projectId: projectId,
       });
     } catch (error) {
-      logger.warn('⚠️  Could not initialize Firebase Admin. Using fallback authentication methods.');
+      Logger.warn('⚠️  Could not initialize Firebase Admin. Using fallback authentication methods.');
       return;
     }
 
-    logger.info('✅ Firebase Admin SDK initialized successfully');
-    logger.info(`📦 Project ID: ${projectId}`);
+    Logger.info('✅ Firebase Admin SDK initialized successfully');
+    Logger.info(`📦 Project ID: ${projectId}`);
   } catch (error: any) {
-    logger.error('❌ Failed to initialize Firebase Admin SDK:', error.message);
-    logger.warn('⚠️  Phone authentication will use fallback mode');
+    Logger.error('❌ Failed to initialize Firebase Admin SDK:', error.message);
+    Logger.warn('⚠️  Phone authentication will use fallback mode');
   }
 };
 
@@ -55,7 +55,7 @@ export const verifyIdToken = async (idToken: string): Promise<admin.auth.Decoded
     const decodedToken = await firebaseAdmin.auth().verifyIdToken(idToken);
     return decodedToken;
   } catch (error: any) {
-    logger.error('Error verifying Firebase ID token:', error.message);
+    Logger.error('Error verifying Firebase ID token:', error.message);
     return null;
   }
 };
