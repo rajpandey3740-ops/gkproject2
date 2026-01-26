@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import UserModel, { IUser } from '../models/UserModel';
 import { OTPService } from '../services/OTPService';
 import { FirebaseAuthService } from '../services/FirebaseAuthService';
@@ -135,7 +135,7 @@ export class AuthController {
           userId: (user._id as any).toString(),
           phone: user.phone,
         };
-        token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+        token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY } as jwt.SignOptions);
       } catch (error) {
         Logger.error('JWT signing failed:', error);
         return res.status(500).json({
@@ -278,11 +278,11 @@ export class AuthController {
       // Generate JWT token
       const token = jwt.sign(
         {
-          userId: user._id.toString(),
+          userId: (user._id as any).toString(),
           phone: user.phone,
         },
-        JWT_SECRET as jwt.Secret,
-        { expiresIn: JWT_EXPIRY }
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRY } as jwt.SignOptions
       );
 
       return res.json({
@@ -357,11 +357,11 @@ export class AuthController {
       // Generate JWT token for our system
       const token = jwt.sign(
         {
-          userId: user._id.toString(),
+          userId: (user._id as any).toString(),
           phone: user.phone,
         },
-        JWT_SECRET as jwt.Secret,
-        { expiresIn: JWT_EXPIRY }
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRY } as jwt.SignOptions
       );
 
       return res.json({
@@ -455,14 +455,13 @@ export class AuthController {
         await user.save();
       }
   
-      // Generate JWT token for our system
       const token = jwt.sign(
         {
-          userId: user._id.toString(),
+          userId: (user._id as any).toString(),
           email: user.email,
         },
-        JWT_SECRET as jwt.Secret,
-        { expiresIn: JWT_EXPIRY }
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRY } as jwt.SignOptions
       );
   
       return res.json({
@@ -541,11 +540,11 @@ export class AuthController {
       // Generate JWT token
       const token = jwt.sign(
         {
-          userId: user._id.toString(),
+          userId: (user._id as any).toString(),
           phone: user.phone,
         },
-        JWT_SECRET as jwt.Secret,
-        { expiresIn: JWT_EXPIRY }
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRY } as jwt.SignOptions
       );
 
       return res.json({
@@ -829,11 +828,11 @@ export class AuthController {
       // Generate JWT token
       const token = jwt.sign(
         {
-          userId: user._id.toString(),
+          userId: (user._id as any).toString(),
           email: user.email,
         },
-        JWT_SECRET as jwt.Secret,
-        { expiresIn: JWT_EXPIRY }
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRY } as jwt.SignOptions
       );
 
       return res.status(201).json({
@@ -911,11 +910,11 @@ export class AuthController {
       // Generate JWT token
       const token = jwt.sign(
         {
-          userId: user._id.toString(),
+          userId: (user._id as any).toString(),
           email: user.email,
         },
-        JWT_SECRET as jwt.Secret,
-        { expiresIn: JWT_EXPIRY }
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRY } as jwt.SignOptions
       );
 
       return res.json({
@@ -1117,8 +1116,8 @@ export class AuthController {
             role: 'owner',
             phone: ownerPhone,
           },
-          JWT_SECRET as jwt.Secret,
-          { expiresIn: JWT_EXPIRY }
+          JWT_SECRET,
+          { expiresIn: JWT_EXPIRY } as jwt.SignOptions
         );
 
         return res.json({
