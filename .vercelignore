@@ -8,16 +8,6 @@ FIREBASE_SETUP.md
 README_FIREBASE.md
 README_SMS.md
 SMS_SETUP.md
-api/index.ts
-api/**/*.ts
-api/config/database.ts
-api/controllers/*
-api/models/*
-api/routes/*
-api/services/*
-api/middleware/*
-api/utils/*
-api/scripts/*
 *.md
 *.log
 .vscode/
