@@ -31,8 +31,6 @@ async function testEmailAuthentication() {
     
     console.log('✅ Registration completed:', registerResponse.data);
     
-    const token = registerResponse.data.data.token;
-    
     // Test 3: Login with email and password
     console.log('\n3. Testing email login...');
     const loginResponse = await axios.post(`${API_BASE_URL}/auth/email/login`, {

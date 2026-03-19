@@ -1,5 +1,6 @@
 import * as nodemailer from 'nodemailer';
 import { Logger } from '../utils/logger';
+import { Order } from '../models/Order';
 
 interface EmailOptions {
   to: string;
@@ -214,6 +215,97 @@ export class EmailService {
       subject: 'Password Reset Request - GK General Store',
       html: html,
       text: `Hello ${name}! Your password reset code is: ${resetCode}. This code will expire in 10 minutes.`
+    });
+  }
+
+  static generateOrderAdminEmail(order: Order): string {
+    const itemsHtml = order.items.map(item => `
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.name} (${item.unit})</td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">₹${item.price * item.quantity}</td>
+      </tr>
+    `).join('');
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>New Order Notification</title>
+      </head>
+      <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="padding: 20px 0;">
+          <tr>
+            <td align="center">
+              <table width="600" cellpadding="0" cellspacing="0" style="background-color: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <tr>
+                  <td style="padding: 30px; text-align: center; background: #4CAF50; color: white; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                    <h1 style="margin: 0; font-size: 24px;">New Order Received! 🛍️</h1>
+                    <p style="margin: 5px 0 0 0;">Order ID: ${order.orderId}</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 30px;">
+                    <h2 style="color: #333; margin-top: 0;">Order Summary</h2>
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
+                      <thead>
+                        <tr style="background-color: #f8f9fa;">
+                          <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Item</th>
+                          <th style="padding: 10px; text-align: center; border-bottom: 2px solid #ddd;">Qty</th>
+                          <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Price</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${itemsHtml}
+                      </tbody>
+                      <tfoot>
+                        <tr>
+                          <td colspan="2" style="padding: 15px 10px; font-weight: bold; text-align: right;">Total Amount:</td>
+                          <td style="padding: 15px 10px; font-weight: bold; text-align: right; color: #4CAF50; font-size: 18px;">₹${order.total}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+
+                    <h2 style="color: #333;">Customer Details</h2>
+                    <p style="margin: 5px 0;"><strong>Name:</strong> ${order.address.name}</p>
+                    <p style="margin: 5px 0;"><strong>Phone:</strong> ${order.address.phone}</p>
+                    <p style="margin: 5px 0;"><strong>Payment:</strong> ${order.paymentMethod.toUpperCase()}</p>
+                    
+                    <h2 style="color: #333;">Delivery Address</h2>
+                    <p style="margin: 5px 0; color: #666; line-height: 1.4;">
+                      ${order.address.street},<br>
+                      ${order.address.city}, ${order.address.state} - ${order.address.pin}
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 20px; text-align: center; background-color: #f8f9fa; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
+                    <p style="color: #888; margin: 0; font-size: 12px;">GK General Store - Admin Notification</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+  }
+
+  static async sendOrderNotificationToAdmin(order: Order): Promise<boolean> {
+    const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
+    if (!adminEmail) {
+      Logger.warn('No admin email configured for order notifications');
+      return false;
+    }
+
+    const html = this.generateOrderAdminEmail(order);
+    return this.sendEmail({
+      to: adminEmail,
+      subject: `New Order Received - #${order.orderId}`,
+      html: html,
+      text: `New order received from ${order.address.name}. Total: ₹${order.total}. Order ID: ${order.orderId}`
     });
   }
 }

@@ -5,7 +5,7 @@ const authRouter = Router();
 const authController = new AuthController();
 
 // Test route
-authRouter.get('/test', (req, res) => {
+authRouter.get('/test', (_, res) => {
   res.json({ success: true, message: 'Auth routes are working' });
 });
 

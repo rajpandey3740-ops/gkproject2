@@ -1,14 +1,14 @@
 import { Order } from '../models/Order';
 import OrderModel from '../models/OrderModel';
-import mongoose from 'mongoose';
+import { EmailService } from './EmailService';
 
 export class OrderService {
   /**
    * Check if MongoDB is connected
    */
-  private isMongoConnected(): boolean {
-    return mongoose.connection.readyState === 1;
-  }
+  // private isMongoConnected(): boolean {
+  //   return mongoose.connection.readyState === 1;
+  // }
 
   /**
    * Generate unique order ID
@@ -37,7 +37,19 @@ export class OrderService {
 
       const order = new OrderModel(newOrder);
       await order.save();
-      return order.toObject() as Order;
+      const orderObj = order.toObject() as Order;
+
+      // Trigger Admin Notifications
+      try {
+        // Send Email notification to admin
+        EmailService.sendOrderNotificationToAdmin(orderObj).catch(err => 
+          console.error('Failed to send admin email notification:', err)
+        );
+      } catch (notifyError) {
+        console.error('Error in order notification trigger:', notifyError);
+      }
+
+      return orderObj;
     } catch (error) {
       console.error('Error creating order:', error);
       throw error;

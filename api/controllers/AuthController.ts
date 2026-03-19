@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import UserModel, { IUser } from '../models/UserModel';
+import UserModel from '../models/UserModel';
 import { OTPService } from '../services/OTPService';
 import { FirebaseAuthService } from '../services/FirebaseAuthService';
 import { EmailService } from '../services/EmailService';

@@ -8,25 +8,6 @@ import { categories } from './data/categoriesData';
 let orders: any[] = [];
 
 // Type definitions
-interface Product {
-  id: number;
-  name: string;
-  category: string;
-  price: number;
-  originalPrice: number;
-  discount: number;
-  image: string;
-  description: string;
-  unit: string;
-  inStock?: boolean;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  icon: string;
-}
-
 interface OrderItem {
   id: number;
   name: string;

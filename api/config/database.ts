@@ -44,7 +44,7 @@ export const connectDatabase = async (): Promise<void> => {
   } catch (error) {
     Logger.error('Failed to connect to MongoDB:');
     Logger.error(error instanceof Error ? error.message : String(error));
-    Logger.error('❌ CRITICAL: MongoDB Atlas connection failed - exiting application');
-    process.exit(1); // Exit the application if MongoDB connection fails
+    Logger.warn('⚠️ CRITICAL: MongoDB Atlas connection failed - falling back to standalone mode');
+    throw error;
   }
 };

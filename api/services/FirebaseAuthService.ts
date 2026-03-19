@@ -1,4 +1,4 @@
-import { getFirebaseAdmin, verifyIdToken } from '../config/firebase';
+import { getFirebaseAdmin } from '../config/firebase';
 import { Logger } from '../utils/logger';
 import * as admin from 'firebase-admin';
 

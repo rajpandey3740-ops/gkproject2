@@ -1,5 +1,6 @@
 import { Product } from '../models/Product';
 import ProductModel from '../models/ProductModel';
+import { products as fallbackProducts } from '../data/productsData';
 import mongoose from 'mongoose';
 
 export class ProductService {
@@ -14,8 +15,6 @@ export class ProductService {
    * Generate a unique product ID
    */
   private generateProductId(): number {
-    // For MongoDB, we can use timestamp-based ID
-    // For in-memory, we'll use a simple incrementing ID
     return Date.now() % 1000000;
   }
 
@@ -24,6 +23,22 @@ export class ProductService {
    */
   async getAllProducts(category?: string, search?: string): Promise<Product[]> {
     try {
+      if (!this.isMongoConnected()) {
+        console.log('MongoDB not connected, using fallback products');
+        let filtered = [...fallbackProducts];
+        if (category && category !== 'all') {
+          filtered = filtered.filter(p => p.category === category);
+        }
+        if (search) {
+          const searchLower = search.toLowerCase();
+          filtered = filtered.filter(p => 
+            p.name.toLowerCase().includes(searchLower) ||
+            p.description.toLowerCase().includes(searchLower)
+          );
+        }
+        return filtered as Product[];
+      }
+
       let query: any = {};
       
       if (category && category !== 'all') {
@@ -42,7 +57,8 @@ export class ProductService {
       return products as Product[];
     } catch (error) {
       console.error('Error fetching products:', error);
-      throw error;
+      // Final fallback if DB query fails
+      return fallbackProducts as Product[];
     }
   }
 
@@ -51,11 +67,16 @@ export class ProductService {
    */
   async getProductById(id: number): Promise<Product | null> {
     try {
+      if (!this.isMongoConnected()) {
+        const product = fallbackProducts.find(p => p.id === id);
+        return product as Product || null;
+      }
       const product = await ProductModel.findOne({ id }).lean();
       return product as Product | null;
     } catch (error) {
       console.error('Error fetching product by ID:', error);
-      throw error;
+      const product = fallbackProducts.find(p => p.id === id);
+      return product as Product || null;
     }
   }
 
@@ -64,11 +85,14 @@ export class ProductService {
    */
   async getProductsByCategory(category: string): Promise<Product[]> {
     try {
+      if (!this.isMongoConnected()) {
+        return fallbackProducts.filter(p => p.category === category) as Product[];
+      }
       const products = await ProductModel.find({ category }).lean();
       return products as Product[];
     } catch (error) {
       console.error('Error fetching products by category:', error);
-      throw error;
+      return fallbackProducts.filter(p => p.category === category) as Product[];
     }
   }
 
@@ -77,6 +101,13 @@ export class ProductService {
    */
   async searchProducts(query: string): Promise<Product[]> {
     try {
+      if (!this.isMongoConnected()) {
+        const searchLower = query.toLowerCase();
+        return fallbackProducts.filter(p => 
+          p.name.toLowerCase().includes(searchLower) ||
+          p.description.toLowerCase().includes(searchLower)
+        ) as Product[];
+      }
       const products = await ProductModel.find({
         $or: [
           { name: { $regex: query, $options: 'i' } },
@@ -86,7 +117,7 @@ export class ProductService {
       return products as Product[];
     } catch (error) {
       console.error('Error searching products:', error);
-      throw error;
+      return [];
     }
   }
 
@@ -95,6 +126,11 @@ export class ProductService {
    */
   async getFeaturedProducts(limit: number = 10): Promise<Product[]> {
     try {
+      if (!this.isMongoConnected()) {
+        return [...fallbackProducts]
+          .sort((a, b) => (b.discount || 0) - (a.discount || 0))
+          .slice(0, limit) as Product[];
+      }
       const products = await ProductModel.find()
         .sort({ discount: -1 })
         .limit(limit)
@@ -102,7 +138,7 @@ export class ProductService {
       return products as Product[];
     } catch (error) {
       console.error('Error fetching featured products:', error);
-      throw error;
+      return fallbackProducts.slice(0, limit) as Product[];
     }
   }
 

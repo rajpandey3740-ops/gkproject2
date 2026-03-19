@@ -5,15 +5,15 @@ import axios from 'axios';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const Login: React.FC = () => {
-  const [step, setStep] = useState<'phone' | 'password' | 'forgot' | 'reset-otp' | 'email-login'>('phone');
-  const [phone, setPhone] = useState('');
+  const [step, setStep] = useState<'identifier' | 'password' | 'forgot' | 'reset-otp'>('identifier');
+  const [identifier, setIdentifier] = useState(''); // Can be email or phone
+  const [isEmail, setIsEmail] = useState(false);
   const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [email, setEmail] = useState('');
   const navigate = useNavigate();
 
   // Auto-clear error after 5 seconds
@@ -26,27 +26,42 @@ const Login: React.FC = () => {
     }
   }, [error]);
 
-  // Handle OTP input changes
-  const handleOtpChange = (value: string) => {
-    setOtp(value);
+  const validateIdentifier = (val: string) => {
+    const emailRegex = /^\S+@\S+\.\S+$/;
+    const phoneRegex = /^[0-9]{10}$/;
+    
+    if (emailRegex.test(val)) {
+      setIsEmail(true);
+      return true;
+    } else if (phoneRegex.test(val)) {
+      setIsEmail(false);
+      return true;
+    }
+    return false;
   };
 
-  const handleBack = () => {
-    setStep('phone');
-    setOtp('');
-    setPassword('');
-    setNewPassword('');
-    setError('');
-    setMessage('');
+  const handleIdentifierChange = (val: string) => {
+    setIdentifier(val);
+    const emailRegex = /^\S+@\S+\.\S+$/;
+    setIsEmail(emailRegex.test(val));
   };
 
-  const handlePasswordLogin = async (e: React.FormEvent) => {
+  const handleContinue = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validateIdentifier(identifier)) {
+      setStep('password');
+    } else {
+      setError('Please enter a valid email address or 10-digit mobile number');
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setMessage('');
     
-    if (!phone || phone.length !== 10) {
-      setError('Please enter a valid 10-digit mobile number');
+    if (!validateIdentifier(identifier)) {
+      setError('Please enter a valid email or 10-digit mobile number');
       return;
     }
     
@@ -58,10 +73,10 @@ const Login: React.FC = () => {
     setLoading(true);
     
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/login/traditional`, {
-        phone,
-        password,
-      });
+      const endpoint = isEmail ? `${API_BASE_URL}/auth/email/login` : `${API_BASE_URL}/auth/login/traditional`;
+      const payload = isEmail ? { email: identifier, password } : { phone: identifier, password };
+      
+      const response = await axios.post(endpoint, payload);
       
       if (response.data.success) {
         localStorage.setItem('token', response.data.data.token);
@@ -82,29 +97,42 @@ const Login: React.FC = () => {
     }
   };
 
+  const handleBack = () => {
+    setStep('identifier');
+    setOtp('');
+    setPassword('');
+    setNewPassword('');
+    setError('');
+    setMessage('');
+  };
+
   const handleForgotPasswordRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setMessage('');
     
-    if (!phone || phone.length !== 10) {
-      setError('Please enter a valid 10-digit mobile number');
+    if (!identifier) {
+      setError('Please enter your email or phone number');
       return;
     }
     
     setLoading(true);
     
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/password-reset/request-otp`, {
-        phone,
-      });
+      const endpoint = isEmail 
+        ? `${API_BASE_URL}/auth/email/password-reset/request` 
+        : `${API_BASE_URL}/auth/password-reset/request-otp`;
+      
+      const payload = isEmail ? { email: identifier } : { phone: identifier };
+      
+      const response = await axios.post(endpoint, payload);
       
       if (response.data.success) {
         setStep('reset-otp');
         setMessage(response.data.message);
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to send OTP. Please try again.');
+      setError(err.response?.data?.error || 'Failed to send reset request. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -115,13 +143,8 @@ const Login: React.FC = () => {
     setError('');
     setMessage('');
     
-    if (!phone || phone.length !== 10) {
-      setError('Please enter a valid 10-digit mobile number');
-      return;
-    }
-    
-    if (!otp || otp.length !== 6) {
-      setError('Please enter a valid 6-digit OTP');
+    if (!otp) {
+      setError(`Please enter the ${isEmail ? 'code' : 'OTP'}`);
       return;
     }
     
@@ -133,19 +156,21 @@ const Login: React.FC = () => {
     setLoading(true);
     
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/password-reset/verify-otp`, {
-        phone,
-        otp,
-        newPassword,
-      });
+      const endpoint = isEmail 
+        ? `${API_BASE_URL}/auth/email/password-reset/verify` 
+        : `${API_BASE_URL}/auth/password-reset/verify-otp`;
+      
+      const payload = isEmail 
+        ? { email: identifier, resetCode: otp, newPassword } 
+        : { phone: identifier, otp, newPassword };
+      
+      const response = await axios.post(endpoint, payload);
       
       if (response.data.success) {
         setMessage(response.data.message);
         
-        // Reset to phone step after successful password reset
         setTimeout(() => {
-          setStep('phone');
-          setPhone('');
+          setStep('identifier');
           setOtp('');
           setNewPassword('');
           setMessage('');
@@ -158,217 +183,148 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleBackToPhone = () => {
-    setStep('phone');
-    setPhone('');
-    setOtp('');
-    setPassword('');
-    setNewPassword('');
-    setError('');
-    setMessage('');
-  };
-
-  const handleEmailLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setMessage('');
-    
-    if (!email || !password) {
-      setError('Please enter both email and password');
-      return;
-    }
-    
-    setLoading(true);
-    
-    try {
-      const response = await axios.post(`${API_BASE_URL}/auth/email/login`, {
-        email,
-        password,
-      });
-      
-      if (response.data.success) {
-        localStorage.setItem('token', response.data.data.token);
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('username', response.data.data.user.name);
-        localStorage.setItem('userData', JSON.stringify(response.data.data.user));
-        
-        setMessage('Login successful! Redirecting...');
-        
-        setTimeout(() => {
-          navigate('/');
-        }, 1000);
-      }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Login failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEmailSignupRequest = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setMessage('');
-    
-    if (!email || !password) {
-      setError('Please enter both email and password');
-      return;
-    }
-    
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return;
-    }
-    
-    setLoading(true);
-    
-    try {
-      const response = await axios.post(`${API_BASE_URL}/auth/email/signup/request-verification`, {
-        email,
-        name: email.split('@')[0], // Use email prefix as name
-      });
-      
-      if (response.data.success) {
-        setMessage(response.data.message);
-        // Optionally redirect to verification page
-      }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to send verification email. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="gradient-bg min-h-screen flex items-center justify-center p-4">
-      <div className="bg-white bg-opacity-95 backdrop-blur rounded-3xl shadow-2xl max-w-md w-full p-8 fade-in-up">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl shadow-xl max-w-md w-full p-8 transition-all duration-300">
         {/* Logo/Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full mb-4">
-            <i className="fas fa-store text-white text-3xl"></i>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-600 rounded-2xl mb-4 shadow-lg shadow-green-200">
+            <i className="fas fa-store text-white text-2xl"></i>
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            {step === 'phone' ? 'Welcome Back!' : 
-             step === 'password' ? 'Login with Password' : 
-             step === 'forgot' ? 'Forgot Password' : 
-             step === 'reset-otp' ? 'Reset Password' : 'Login with Email'}
+          <h1 className="text-2xl font-bold text-gray-900">
+            {step === 'identifier' ? 'Welcome Back' : 
+             step === 'password' ? 'Enter Password' : 
+             'Reset Password'}
           </h1>
-          <p className="text-gray-600">
-            {step === 'phone' ? 'Login with your mobile number' : 
-             step === 'password' ? 'Enter your password to login' : 
-             step === 'forgot' ? 'Enter your mobile number to receive OTP for password reset' : 
-             step === 'reset-otp' ? 'Enter the OTP sent to your phone and new password' : 
-             'Enter your email and password to login'}
+          <p className="text-gray-500 mt-1">
+            {step === 'identifier' ? 'Login to your account' : 
+             step === 'password' ? `Continue as ${identifier}` : 
+             'Follow steps to reset password'}
           </p>
         </div>
 
         {/* Error/Success Messages */}
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-            <i className="fas fa-exclamation-circle mr-2"></i>
-            {error}
+          <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl text-red-700 text-sm animate-shake">
+            <div className="flex items-center">
+              <i className="fas fa-exclamation-circle mr-2"></i>
+              {error}
+            </div>
           </div>
         )}
         {message && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
-            <i className="fas fa-check-circle mr-2"></i>
-            {message}
+          <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-r-xl text-green-700 text-sm animate-fade-in">
+            <div className="flex items-center">
+              <i className="fas fa-check-circle mr-2"></i>
+              {message}
+            </div>
           </div>
         )}
 
-        {/* Phone Step */}
-        {step === 'phone' && (
-          <div className="space-y-6">
+        {/* Identifier Step */}
+        {step === 'identifier' && (
+          <form onSubmit={handleContinue} className="space-y-6">
             <div>
-              <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
-                <i className="fas fa-phone mr-2 text-purple-600"></i>Mobile Number
+              <label htmlFor="identifier" className="block text-sm font-semibold text-gray-700 mb-2">
+                Email or Mobile Number
               </label>
-              <input
-                type="tel"
-                id="phone"
-                required
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 transition-all text-lg"
-                placeholder="Enter 10-digit mobile number"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                maxLength={10}
-                autoFocus
-              />
-              <p className="text-xs text-gray-500 mt-2">
-                We'll send an OTP to verify your number
-              </p>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
+                  <i className={`fas ${isEmail ? 'fa-envelope' : 'fa-phone-alt'} transition-all`}></i>
+                </span>
+                <input
+                  type="text"
+                  id="identifier"
+                  required
+                  className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all text-gray-800"
+                  placeholder="email@example.com or 9876543210"
+                  value={identifier}
+                  onChange={(e) => handleIdentifierChange(e.target.value)}
+                  autoFocus
+                />
+              </div>
             </div>
 
             <button
-              type="button"
-              onClick={() => setStep('password')}
-              disabled={phone.length !== 10}
-              className="w-full py-4 gradient-bg text-white font-bold text-lg rounded-xl shadow-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              type="submit"
+              className="w-full py-3.5 bg-green-600 text-white font-bold rounded-xl shadow-lg shadow-green-100 hover:bg-green-700 hover:shadow-green-200 active:scale-[0.98] transition-all"
             >
-              Continue with Password
+              Continue
             </button>
             
-            <div className="relative flex items-center py-4">
-              <div className="flex-grow border-t border-gray-300"></div>
-              <span className="flex-shrink mx-4 text-gray-500 text-sm">OR</span>
-              <div className="flex-grow border-t border-gray-300"></div>
+            <div className="relative flex items-center py-2">
+              <div className="flex-grow border-t border-gray-100"></div>
+              <span className="flex-shrink mx-4 text-gray-400 text-xs font-medium uppercase tracking-wider">New to GK Shop?</span>
+              <div className="flex-grow border-t border-gray-100"></div>
             </div>
             
-            <button
-              type="button"
-              onClick={() => setStep('email-login')}
-              className="w-full py-3 border-2 border-blue-600 text-blue-600 font-bold rounded-xl hover:bg-blue-50 transition-all"
+            <Link
+              to="/signup"
+              className="block w-full py-3 text-center border-2 border-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-50 hover:border-gray-200 transition-all"
             >
-              Login with Email
-            </button>
-          </div>
+              Create an Account
+            </Link>
+          </form>
         )}
 
-        {/* Password Login Step */}
+        {/* Password Step */}
         {step === 'password' && (
-          <form onSubmit={handlePasswordLogin} className="space-y-6">
-            <div>
-              <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
-                <i className="fas fa-phone mr-2 text-purple-600"></i>Mobile Number
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                required
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 transition-all text-lg"
-                placeholder="Enter 10-digit mobile number"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                maxLength={10}
-                autoFocus
-              />
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div className="bg-gray-50 p-3 rounded-xl flex items-center justify-between border border-gray-100">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+                  <i className={`fas ${isEmail ? 'fa-envelope' : 'fa-phone-alt'} text-xs`}></i>
+                </div>
+                <span className="text-sm font-medium text-gray-700 truncate max-w-[200px]">{identifier}</span>
+              </div>
+              <button type="button" onClick={handleBack} className="text-xs font-bold text-green-600 hover:text-green-700 uppercase tracking-tight">
+                Change
+              </button>
             </div>
-            
+
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
-                <i className="fas fa-lock mr-2 text-purple-600"></i>Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                required
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 transition-all text-lg"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <div className="flex justify-between items-center mb-2">
+                <label htmlFor="password" className="text-sm font-semibold text-gray-700">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setStep('forgot')}
+                  className="text-xs font-bold text-green-600 hover:text-green-700 uppercase tracking-tight"
+                >
+                  Forgot?
+                </button>
+              </div>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
+                  <i className="fas fa-lock"></i>
+                </span>
+                <input
+                  type="password"
+                  id="password"
+                  required
+                  className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all text-gray-800"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoFocus
+                />
+              </div>
             </div>
             
             <button
               type="submit"
-              disabled={loading || phone.length !== 10 || !password}
-              className="w-full py-4 gradient-bg text-white font-bold text-lg rounded-xl shadow-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading}
+              className="w-full py-3.5 bg-green-600 text-white font-bold rounded-xl shadow-lg shadow-green-100 hover:bg-green-700 hover:shadow-green-200 active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {(loading) ? (
-                <span className="flex items-center justify-center">
-                  <i className="fas fa-spinner fa-spin mr-2"></i>
+              {loading ? (
+                <div className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
                   Logging in...
-                </span>
+                </div>
               ) : (
                 'Login'
               )}
@@ -377,275 +333,113 @@ const Login: React.FC = () => {
             <button
               type="button"
               onClick={handleBack}
-              className="w-full py-3 text-gray-600 hover:text-gray-800 font-semibold transition-all"
+              className="w-full py-2 text-gray-500 hover:text-gray-700 font-semibold text-sm transition-all"
             >
               <i className="fas fa-arrow-left mr-2"></i>
-              Back to Options
+              Back to Start
             </button>
           </form>
         )}
 
-        {/* Forgot Password Step */}
-        {step === 'forgot' && (
-          <form onSubmit={handleForgotPasswordRequest} className="space-y-6">
-            <div>
-              <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
-                <i className="fas fa-phone mr-2 text-purple-600"></i>Mobile Number
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                required
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 transition-all text-lg"
-                placeholder="Enter 10-digit mobile number"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                maxLength={10}
-                autoFocus
-              />
-            </div>
-            
-            <button
-              type="submit"
-              disabled={loading || phone.length !== 10}
-              className="w-full py-4 gradient-bg text-white font-bold text-lg rounded-xl shadow-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {(loading) ? (
-                <span className="flex items-center justify-center">
-                  <i className="fas fa-spinner fa-spin mr-2"></i>
-                  Sending OTP...
-                </span>
-              ) : (
-                'Send Reset OTP'
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleBackToPhone}
-              className="w-full py-3 text-gray-600 hover:text-gray-800 font-semibold transition-all"
-            >
-              <i className="fas fa-arrow-left mr-2"></i>
-              Back to Options
-            </button>
-          </form>
-        )}
-        
-        {/* Reset Password with OTP Step */}
+        {/* Reset Password Step */}
         {step === 'reset-otp' && (
           <form onSubmit={handleResetPassword} className="space-y-6">
-            <div>
-              <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
-                <i className="fas fa-phone mr-2 text-purple-600"></i>Mobile Number
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                required
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 transition-all text-lg"
-                placeholder="Enter 10-digit mobile number"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                maxLength={10}
-                autoFocus
-              />
+            <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
+              <p className="text-xs text-orange-800 font-medium leading-relaxed">
+                <i className="fas fa-info-circle mr-1.5"></i>
+                Please enter the {isEmail ? 'verification code' : 'OTP'} sent to your {isEmail ? 'email' : 'phone'}.
+              </p>
             </div>
-            
-            <div>
-              <label htmlFor="otp" className="block text-sm font-semibold text-gray-700 mb-2">
-                <i className="fas fa-key mr-2 text-purple-600"></i>Enter OTP
-              </label>
-              <input
-                type="text"
-                id="otp"
-                required
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 transition-all text-center text-2xl tracking-widest"
-                placeholder="000000"
-                value={otp}
-                onChange={(e) => handleOtpChange(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                maxLength={6}
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="newPassword" className="block text-sm font-semibold text-gray-700 mb-2">
-                <i className="fas fa-lock mr-2 text-purple-600"></i>New Password
-              </label>
-              <input
-                type="password"
-                id="newPassword"
-                required
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 transition-all text-lg"
-                placeholder="Enter new password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
+
+            <div className="grid grid-cols-1 gap-5">
+              <div>
+                <label htmlFor="otp" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Verification Code
+                </label>
+                <input
+                  type="text"
+                  id="otp"
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all text-center text-xl font-bold tracking-[0.5em]"
+                  placeholder="000000"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  maxLength={6}
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="newPassword" className="block text-sm font-semibold text-gray-700 mb-2">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all text-gray-800"
+                  placeholder="Minimum 6 characters"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+              </div>
             </div>
             
             <button
               type="submit"
-              disabled={loading || phone.length !== 10 || otp.length !== 6 || !newPassword}
-              className="w-full py-4 gradient-bg text-white font-bold text-lg rounded-xl shadow-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading || otp.length !== 6 || newPassword.length < 6}
+              className="w-full py-3.5 bg-green-600 text-white font-bold rounded-xl shadow-lg shadow-green-100 hover:bg-green-700 transition-all disabled:opacity-70"
             >
-              {(loading) ? (
-                <span className="flex items-center justify-center">
-                  <i className="fas fa-spinner fa-spin mr-2"></i>
-                  Resetting Password...
-                </span>
-              ) : (
-                'Reset Password'
-              )}
+              {loading ? 'Resetting...' : 'Reset Password'}
             </button>
 
             <button
               type="button"
-              onClick={handleBackToPhone}
-              className="w-full py-3 text-gray-600 hover:text-gray-800 font-semibold transition-all"
+              onClick={handleBack}
+              className="w-full py-2 text-gray-500 hover:text-gray-700 font-semibold text-sm"
             >
               <i className="fas fa-arrow-left mr-2"></i>
-              Back to Options
+              Cancel
             </button>
           </form>
         )}
 
-        {/* Email Login Step */}
-        {step === 'email-login' && (
-          <form onSubmit={handleEmailLogin} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                <i className="fas fa-envelope mr-2 text-purple-600"></i>Email Address
-              </label>
-              <input
-                type="email"
-                id="email"
-                required
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 transition-all text-lg"
-                placeholder="Enter your email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoFocus
-              />
+        {/* Forgot Password Step (Request) */}
+        {step === 'forgot' && (
+          <form onSubmit={handleForgotPasswordRequest} className="space-y-6">
+            <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+              <p className="text-xs text-blue-800 font-medium leading-relaxed">
+                <i className="fas fa-paper-plane mr-1.5"></i>
+                We will send a reset link/OTP to your registered {isEmail ? 'email' : 'phone number'}.
+              </p>
             </div>
-            
-            <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
-                <i className="fas fa-lock mr-2 text-purple-600"></i>Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                required
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 transition-all text-lg"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            
+
             <button
               type="submit"
-              disabled={loading || !email || !password}
-              className="w-full py-4 gradient-bg text-white font-bold text-lg rounded-xl shadow-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading}
+              className="w-full py-3.5 bg-green-600 text-white font-bold rounded-xl shadow-lg hover:bg-green-700 transition-all disabled:opacity-70"
             >
-              {(loading) ? (
-                <span className="flex items-center justify-center">
-                  <i className="fas fa-spinner fa-spin mr-2"></i>
-                  Logging in...
-                </span>
-              ) : (
-                'Login'
-              )}
+              {loading ? 'Sending...' : 'Send Reset Link'}
             </button>
 
             <button
               type="button"
-              onClick={handleBackToPhone}
-              className="w-full py-3 text-gray-600 hover:text-gray-800 font-semibold transition-all"
+              onClick={() => setStep('password')}
+              className="w-full py-2 text-gray-500 hover:text-gray-700 font-semibold text-sm"
             >
               <i className="fas fa-arrow-left mr-2"></i>
-              Back to Phone Login
+              Back to Login
             </button>
-            
-            {/* Email Signup Section */}
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <h3 className="text-center text-gray-600 mb-4">Don't have an account?</h3>
-              <form onSubmit={handleEmailSignupRequest} className="space-y-4">
-                <div>
-                  <label htmlFor="email-signup" className="block text-sm font-semibold text-gray-700 mb-2">
-                    <i className="fas fa-envelope mr-2 text-purple-600"></i>Email Address
-                  </label>
-                  <input
-                    type="email"
-                    id="email-signup"
-                    required
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 transition-all text-lg"
-                    placeholder="Enter your email address"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="password-signup" className="block text-sm font-semibold text-gray-700 mb-2">
-                    <i className="fas fa-lock mr-2 text-purple-600"></i>Password
-                  </label>
-                  <input
-                    type="password"
-                    id="password-signup"
-                    required
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 transition-all text-lg"
-                    placeholder="Create a password (min 6 chars)"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-                
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all"
-                >
-                  Sign Up with Email
-                </button>
-              </form>
-            </div>
           </form>
         )}
         
-        {/* Sign Up Link */}
-        <div className="text-center mt-6">
-          <p className="text-gray-600">
-            Don't have an account?{' '}
-            <Link to="/signup" className="text-purple-600 hover:text-purple-700 font-semibold">
-              Sign Up
-            </Link>
-          </p>
-        </div>
-
-        {/* Back to Home */}
-        <div className="text-center mt-4">
-          <Link to="/" className="text-sm text-gray-500 hover:text-gray-700">
-            <i className="fas fa-arrow-left mr-2"></i>Back to Home
+        {/* Footer */}
+        <div className="mt-8 text-center">
+          <Link to="/" className="text-xs font-bold text-gray-400 hover:text-green-600 uppercase tracking-widest transition-colors">
+            <i className="fas fa-chevron-left mr-1.5"></i>
+            Home
           </Link>
         </div>
       </div>
-
-      <style>{`
-        .fade-in-up {
-          animation: fadeInUp 0.6s ease;
-        }
-        
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
     </div>
   );
 };

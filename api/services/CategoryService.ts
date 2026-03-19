@@ -1,5 +1,6 @@
 import { Category } from '../models/Product';
 import CategoryModel from '../models/CategoryModel';
+import { categories as fallbackCategories } from '../data/categoriesData';
 import mongoose from 'mongoose';
 
 export class CategoryService {
@@ -15,6 +16,17 @@ export class CategoryService {
    */
   async getAllCategories(includeAll: boolean = true): Promise<Category[]> {
     try {
+      if (!this.isMongoConnected()) {
+        console.log('MongoDB not connected, using fallback categories');
+        if (includeAll) {
+          return [
+            { id: 'all', name: 'All Products', icon: '🛒' },
+            ...fallbackCategories as Category[]
+          ];
+        }
+        return fallbackCategories as Category[];
+      }
+
       const categories = await CategoryModel.find().lean();
       
       if (includeAll) {
@@ -26,7 +38,13 @@ export class CategoryService {
       return categories as Category[];
     } catch (error) {
       console.error('Error fetching categories:', error);
-      throw error;
+      if (includeAll) {
+        return [
+          { id: 'all', name: 'All Products', icon: '🛒' },
+          ...fallbackCategories as Category[]
+        ];
+      }
+      return fallbackCategories as Category[];
     }
   }
 
@@ -39,11 +57,17 @@ export class CategoryService {
         return { id: 'all', name: 'All Products', icon: '🛒' };
       }
       
+      if (!this.isMongoConnected()) {
+        const category = fallbackCategories.find(c => c.id === id);
+        return category as Category || null;
+      }
+
       const category = await CategoryModel.findOne({ id }).lean();
       return category as Category | null;
     } catch (error) {
       console.error('Error fetching category by ID:', error);
-      throw error;
+      const category = fallbackCategories.find(c => c.id === id);
+      return category as Category || null;
     }
   }
 
@@ -54,11 +78,15 @@ export class CategoryService {
     try {
       if (id === 'all') return true;
       
+      if (!this.isMongoConnected()) {
+        return fallbackCategories.some(c => c.id === id);
+      }
+
       const count = await CategoryModel.countDocuments({ id });
       return count > 0;
     } catch (error) {
       console.error('Error checking category existence:', error);
-      throw error;
+      return fallbackCategories.some(c => c.id === id);
     }
   }
 

@@ -4,28 +4,8 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/api/health",
-      "destination": "/api/vercel-handler"
-    },
-    {
-      "source": "/api/products/:path*",
-      "destination": "/api/vercel-handler"
-    },
-    {
-      "source": "/api/categories/:path*",
-      "destination": "/api/vercel-handler"
-    },
-    {
-      "source": "/api/orders/:path*",
-      "destination": "/api/vercel-handler"
-    },
-    {
-      "source": "/api/auth/:path*",
-      "destination": "/api/vercel-handler"
-    },
-    {
       "source": "/api/(.*)",
-      "destination": "/api/vercel-handler"
+      "destination": "/api/index"
     },
     {
       "source": "/(.*)",
@@ -52,10 +32,10 @@
     }
   ],
   "functions": {
-    "api/vercel-handler.ts": {
+    "api/index.ts": {
       "runtime": "@vercel/node@5.5.4",
-      "memory": 128,
-      "maxDuration": 10
+      "memory": 256,
+      "maxDuration": 15
     }
   },
   "nodeVersion": "20.x"
