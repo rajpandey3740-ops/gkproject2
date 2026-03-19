@@ -32,7 +32,7 @@
     }
   ],
   "functions": {
-    "api/index.ts": {
+    "api/*.ts": {
       "memory": 256,
       "maxDuration": 15
     }
