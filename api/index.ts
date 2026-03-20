@@ -1,8 +1,8 @@
 import * as dotenv from 'dotenv';
-import { createApp } from './config/app';
-import { connectDatabase } from './config/database';
-import { initializeFirebase } from './config/firebase';
-import { Logger } from './utils/logger';
+import { createApp } from '../server/config/app';
+import { connectDatabase } from '../server/config/database';
+import { initializeFirebase } from '../server/config/firebase';
+import { Logger } from '../server/utils/logger';
 
 // Load environment variables only for local dev
 if (process.env.NODE_ENV !== 'production') {
