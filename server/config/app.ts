@@ -44,6 +44,17 @@ export function createApp(): Application {
   app.use('/api/orders', orderRoutes);
   app.use('/api/auth', authRoutes);
 
+  // Debug catch-all for /api routes
+  app.use('/api/*', (req: Request, res: Response) => {
+    console.log(`[DEBUG] Unmatched API route: ${req.method} ${req.originalUrl}`);
+    return res.status(404).json({
+      success: false,
+      error: 'API route not found',
+      path: req.originalUrl,
+      method: req.method
+    });
+  });
+
   // 404 handler
   app.use((_req: Request, res: Response) => {
     return res.status(404).json({

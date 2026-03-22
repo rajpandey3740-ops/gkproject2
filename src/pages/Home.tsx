@@ -77,7 +77,25 @@ const Home: React.FC = () => {
     } catch (err: any) {
       console.error('Error fetching data:', err);
       console.error('Error details:', err.response?.data || err.message);
-      setError(`Failed to load products: ${err.response?.data?.error || err.message || 'Please try again later.'}`);
+      
+      let errorMsg = 'Please try again later.';
+      if (err.response?.data) {
+        if (typeof err.response.data === 'string') {
+          errorMsg = err.response.data;
+        } else if (err.response.data.error) {
+          errorMsg = typeof err.response.data.error === 'object' 
+            ? JSON.stringify(err.response.data.error) 
+            : err.response.data.error;
+        } else if (err.response.data.message) {
+          errorMsg = err.response.data.message;
+        } else {
+          errorMsg = JSON.stringify(err.response.data);
+        }
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
+      
+      setError(`Failed to load products: ${errorMsg}`);
     } finally {
       setIsLoading(false);
     }
