@@ -1,4 +1,4 @@
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
 import { Logger } from '../utils/logger';
 
 // Initialize Firebase Admin SDK
@@ -7,8 +7,9 @@ let firebaseAdmin: admin.app.App | null = null;
 export const initializeFirebase = (): void => {
   try {
     // Check if Firebase is already initialized
-    if (admin.apps.length > 0) {
-      firebaseAdmin = admin.apps[0] as admin.app.App;
+    const apps = admin.apps;
+    if (apps && apps.length > 0) {
+      firebaseAdmin = apps[0] as admin.app.App;
       Logger.info('✅ Firebase Admin already initialized');
       return;
     }
