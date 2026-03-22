@@ -146,5 +146,6 @@ UserSchema.methods.clearResetPasswordCode = function(): void {
 
 
 
-export default mongoose.model<IUser>('User', UserSchema);
+// Export model with check for existing model to avoid re-definition error in Vercel
+export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 

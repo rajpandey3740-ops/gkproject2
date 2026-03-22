@@ -82,4 +82,5 @@ ProductSchema.pre<IProduct>('save', function(next) {
   next();
 });
 
-export default mongoose.model<IProduct>('Product', ProductSchema);
+// Export model with check for existing model to avoid re-definition error in Vercel
+export default mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);

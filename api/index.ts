@@ -1,7 +1,7 @@
-import { createApp } from '../server/config/app';
-import { connectDatabase } from '../server/config/database';
-import { initializeFirebase } from '../server/config/firebase';
-import { Logger } from '../server/utils/logger';
+import { createApp } from './_server/config/app';
+import { connectDatabase } from './_server/config/database';
+import { initializeFirebase } from './_server/config/firebase';
+import { Logger } from './_server/utils/logger';
 
 // Initialize Firebase safely
 try {
@@ -12,6 +12,11 @@ try {
 
 // Create the Express app instance
 const app = createApp();
+
+// Add a simple ping route directly to the app
+app.get('/api/ping', (_req, res) => {
+  res.json({ status: 'pong', timestamp: new Date().toISOString() });
+});
 
 // Connect to database
 connectDatabase().then(() => {

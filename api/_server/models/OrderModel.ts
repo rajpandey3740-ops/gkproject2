@@ -47,4 +47,5 @@ const OrderSchema = new Schema<IOrder>(
   }
 );
 
-export default mongoose.model<IOrder>('Order', OrderSchema);
+// Export model with check for existing model to avoid re-definition error in Vercel
+export default mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema);

@@ -13,7 +13,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "server": "tsx api/index.ts",
     "server:dev": "nodemon --exec tsx api/index.ts",
-    "db:seed": "tsx server/scripts/seedDatabase.ts",
+    "db:seed": "tsx api/_server/scripts/seedDatabase.ts",
     "vercel-build": "npm run build"
   },
   "dependencies": {

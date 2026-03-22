@@ -31,4 +31,5 @@ const CategorySchema: Schema = new Schema(
   }
 );
 
-export default mongoose.model<ICategory>('Category', CategorySchema);
+// Export model with check for existing model to avoid re-definition error in Vercel
+export default mongoose.models.Category || mongoose.model<ICategory>('Category', CategorySchema);
