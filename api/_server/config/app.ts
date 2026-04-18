@@ -1,8 +1,6 @@
 import express from 'express';
 import { Application, Request, Response, NextFunction, Router } from 'express';
 import cors from 'cors';
-import path from 'path';
-import fs from 'fs';
 import productRoutes from '../routes/productRoutes';
 import categoryRoutes from '../routes/categoryRoutes';
 import orderRoutes from '../routes/orderRoutes';

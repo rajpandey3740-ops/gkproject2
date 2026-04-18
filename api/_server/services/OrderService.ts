@@ -63,7 +63,7 @@ export class OrderService {
     try {
       const query = username ? { username } : {};
       const orders = await OrderModel.find(query).sort({ createdAt: -1 }).lean();
-      return orders as Order[];
+      return orders as unknown as Order[];
     } catch (error) {
       console.error('Error fetching orders:', error);
       throw error;
@@ -76,7 +76,7 @@ export class OrderService {
   async getOrderById(orderId: string): Promise<Order | null> {
     try {
       const order = await OrderModel.findOne({ orderId }).lean();
-      return order as Order | null;
+      return order as unknown as Order | null;
     } catch (error) {
       console.error('Error fetching order by ID:', error);
       throw error;
@@ -93,7 +93,7 @@ export class OrderService {
         { status, updatedAt: new Date() },
         { new: true, runValidators: true }
       ).lean();
-      return order as Order | null;
+      return order as unknown as Order | null;
     } catch (error) {
       console.error('Error updating order status:', error);
       throw error;

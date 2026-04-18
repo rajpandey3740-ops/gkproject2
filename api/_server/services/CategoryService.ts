@@ -32,10 +32,10 @@ export class CategoryService {
       if (includeAll) {
         return [
           { id: 'all', name: 'All Products', icon: '🛒' },
-          ...categories as Category[]
+          ...categories as unknown as Category[]
         ];
       }
-      return categories as Category[];
+      return categories as unknown as Category[];
     } catch (error) {
       console.error('Error fetching categories:', error);
       if (includeAll) {
@@ -63,11 +63,11 @@ export class CategoryService {
       }
 
       const category = await CategoryModel.findOne({ id }).lean();
-      return category as Category | null;
+      return category as unknown as Category | null;
     } catch (error) {
       console.error('Error fetching category by ID:', error);
       const category = fallbackCategories.find(c => c.id === id);
-      return category as Category || null;
+      return category as unknown as Category || null;
     }
   }
 
@@ -97,7 +97,7 @@ export class CategoryService {
     try {
       const category = new CategoryModel(categoryData);
       await category.save();
-      return category.toObject() as Category;
+      return category.toObject() as unknown as Category;
     } catch (error) {
       console.error('Error creating category:', error);
       throw error;

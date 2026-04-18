@@ -1,7 +1,13 @@
+import * as dotenv from 'dotenv';
 import { createApp } from './_server/config/app';
 import { connectDatabase } from './_server/config/database';
 import { initializeFirebase } from './_server/config/firebase';
 import { Logger } from './_server/utils/logger';
+
+// Load environment variables for local development
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config();
+}
 
 // Initialize Firebase safely
 try {
@@ -30,7 +36,7 @@ export default app;
 
 // For local development only
 if (process.env.NODE_ENV !== 'production') {
-  const PORT = Number(process.env.PORT) || 3001;
+  const PORT = Number(process.env.PORT) || 3002;
   app.listen(PORT, () => {
     Logger.info(`✅ Local server running on http://localhost:${PORT}`);
   });

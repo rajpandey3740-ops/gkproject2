@@ -54,11 +54,11 @@ export class ProductService {
       }
       
       const products = await ProductModel.find(query).lean();
-      return products as Product[];
+      return products as unknown as Product[];
     } catch (error) {
       console.error('Error fetching products:', error);
       // Final fallback if DB query fails
-      return fallbackProducts as Product[];
+      return fallbackProducts as unknown as Product[];
     }
   }
 
@@ -69,14 +69,14 @@ export class ProductService {
     try {
       if (!this.isMongoConnected()) {
         const product = fallbackProducts.find(p => p.id === id);
-        return product as Product || null;
+        return product as unknown as Product || null;
       }
       const product = await ProductModel.findOne({ id }).lean();
-      return product as Product | null;
+      return product as unknown as Product | null;
     } catch (error) {
       console.error('Error fetching product by ID:', error);
       const product = fallbackProducts.find(p => p.id === id);
-      return product as Product || null;
+      return product as unknown as Product || null;
     }
   }
 
@@ -86,13 +86,13 @@ export class ProductService {
   async getProductsByCategory(category: string): Promise<Product[]> {
     try {
       if (!this.isMongoConnected()) {
-        return fallbackProducts.filter(p => p.category === category) as Product[];
+        return fallbackProducts.filter(p => p.category === category) as unknown as Product[];
       }
       const products = await ProductModel.find({ category }).lean();
-      return products as Product[];
+      return products as unknown as Product[];
     } catch (error) {
       console.error('Error fetching products by category:', error);
-      return fallbackProducts.filter(p => p.category === category) as Product[];
+      return fallbackProducts.filter(p => p.category === category) as unknown as Product[];
     }
   }
 
@@ -106,7 +106,7 @@ export class ProductService {
         return fallbackProducts.filter(p => 
           p.name.toLowerCase().includes(searchLower) ||
           p.description.toLowerCase().includes(searchLower)
-        ) as Product[];
+        ) as unknown as Product[];
       }
       const products = await ProductModel.find({
         $or: [
@@ -114,7 +114,7 @@ export class ProductService {
           { description: { $regex: query, $options: 'i' } }
         ]
       }).lean();
-      return products as Product[];
+      return products as unknown as Product[];
     } catch (error) {
       console.error('Error searching products:', error);
       return [];
@@ -129,16 +129,16 @@ export class ProductService {
       if (!this.isMongoConnected()) {
         return [...fallbackProducts]
           .sort((a, b) => (b.discount || 0) - (a.discount || 0))
-          .slice(0, limit) as Product[];
+          .slice(0, limit) as unknown as Product[];
       }
       const products = await ProductModel.find()
         .sort({ discount: -1 })
         .limit(limit)
         .lean();
-      return products as Product[];
+      return products as unknown as Product[];
     } catch (error) {
       console.error('Error fetching featured products:', error);
-      return fallbackProducts.slice(0, limit) as Product[];
+      return fallbackProducts.slice(0, limit) as unknown as Product[];
     }
   }
 
@@ -175,7 +175,7 @@ export class ProductService {
       
       const product = new ProductModel(newProduct);
       await product.save();
-      return product.toObject() as Product;
+      return product.toObject() as unknown as Product;
     } catch (error) {
       console.error('Error creating product:', error);
       throw error;
@@ -201,7 +201,7 @@ export class ProductService {
         productData,
         { new: true, runValidators: true }
       ).lean();
-      return product as Product | null;
+      return product as unknown as Product | null;
     } catch (error) {
       console.error('Error updating product:', error);
       throw error;
