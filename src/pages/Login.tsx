@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const Login: React.FC = () => {
   const [step, setStep] = useState<'identifier' | 'password' | 'forgot' | 'reset-otp'>('identifier');

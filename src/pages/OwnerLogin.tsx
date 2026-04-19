@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+
 const OwnerLogin = () => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -13,7 +15,7 @@ const OwnerLogin = () => {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/owner/login', {
+      const response = await fetch(`${API_BASE_URL}/auth/owner/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

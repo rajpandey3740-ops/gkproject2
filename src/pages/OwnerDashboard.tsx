@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Product, Order, Category } from '../types';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+
 const OwnerDashboard = () => {
   const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
   const [products, setProducts] = useState<Product[]>([]);
@@ -51,8 +53,8 @@ const OwnerDashboard = () => {
     try {
       setLoading(true);
       const [productsRes, ordersRes] = await Promise.all([
-        axios.get('/api/products'),
-        axios.get('/api/orders')
+        axios.get(`${API_BASE_URL}/products`),
+        axios.get(`${API_BASE_URL}/orders`)
       ]);
       setProducts(productsRes.data.data || []);
       setOrders(ordersRes.data.data || []);
@@ -65,7 +67,7 @@ const OwnerDashboard = () => {
 
   const loadCategories = async () => {
     try {
-      const res = await axios.get('/api/categories');
+      const res = await axios.get(`${API_BASE_URL}/categories`);
       setCategories(res.data.data || []);
     } catch (error) {
       console.error('Error loading categories:', error);
@@ -89,7 +91,7 @@ const OwnerDashboard = () => {
   const toggleStock = async (product: Product) => {
     try {
       const newStock = !product.inStock;
-      await axios.patch(`/api/products/${product.id}`, {
+      await axios.patch(`${API_BASE_URL}/products/${product.id}`, {
         inStock: newStock === undefined ? true : newStock
       });
       setProducts(products.map(p => 
@@ -114,7 +116,7 @@ const OwnerDashboard = () => {
         finalImageUrl = `${imageUrl}?auto=format&fit=crop&w=400&q=80`;
       }
 
-      await axios.patch(`/api/products/${product.id}`, {
+      await axios.patch(`${API_BASE_URL}/products/${product.id}`, {
         image: finalImageUrl
       });
       setProducts(products.map(p => 
@@ -181,7 +183,7 @@ const OwnerDashboard = () => {
     const discount = mrp - selling;
 
     try {
-      await axios.patch(`/api/products/${product.id}`, {
+      await axios.patch(`${API_BASE_URL}/products/${product.id}`, {
         originalPrice: mrp,
         price: selling,
         discount: discount
@@ -236,7 +238,7 @@ const OwnerDashboard = () => {
 
   const updateOrderStatus = async (orderId: string, status: Order['status']) => {
     try {
-      await axios.patch(`/api/orders/${orderId}/status`, { status });
+      await axios.patch(`${API_BASE_URL}/orders/${orderId}/status`, { status });
       setOrders(orders.map(o => 
         o.orderId === orderId ? { ...o, status } : o
       ));
@@ -254,7 +256,7 @@ const OwnerDashboard = () => {
         price: parseFloat(newProduct.price)
       };
 
-      const response = await axios.post('/api/products', productData);
+      const response = await axios.post(`${API_BASE_URL}/products`, productData);
       
       if (response.data.success) {
         alert('Product added successfully!');
@@ -302,7 +304,7 @@ const OwnerDashboard = () => {
         icon: newCategory.icon
       };
 
-      const response = await axios.post('/api/categories', categoryData);
+      const response = await axios.post(`${API_BASE_URL}/categories`, categoryData);
       
       if (response.data.success) {
         alert('Category added successfully!');

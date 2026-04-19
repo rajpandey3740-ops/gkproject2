@@ -3,6 +3,8 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { useFirebaseEmailAuth } from '../hooks/useFirebaseEmailAuth';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+
 const EmailLogin: React.FC = () => {
   const [step, setStep] = useState<'email' | 'verification' | 'login' | 'reset-request' | 'reset-verify' | 'email-sent'>('email');
   const [email, setEmail] = useState('');
@@ -81,7 +83,7 @@ const EmailLogin: React.FC = () => {
     setMessage('');
     setLoading(true);
     try {
-      const response = await axios.post('/api/auth/email/password-reset/request', { email });
+      const response = await axios.post(`${API_BASE_URL}/auth/email/password-reset/request`, { email });
       if (response.data.success) {
         setStep('reset-verify');
         setMessage('Reset code sent to your email');
@@ -99,7 +101,7 @@ const EmailLogin: React.FC = () => {
     setMessage('');
     setLoading(true);
     try {
-      const response = await axios.post('/api/auth/email/password-reset/verify', { 
+      const response = await axios.post(`${API_BASE_URL}/auth/email/password-reset/verify`, { 
         email, 
         resetCode, 
         newPassword 

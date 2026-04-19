@@ -9,8 +9,36 @@ import authRoutes from '../routes/authRoutes';
 export function createApp(): Application {
   const app = express();
 
-  // Middleware
-  app.use(cors());
+  // CORS Configuration - Allow both localhost and production domains
+  const corsOptions = {
+    origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      const allowedOrigins = [
+        'http://localhost:5173',      // Vite dev server
+        'http://localhost:3000',      // Alternative local port
+        process.env.FRONTEND_URL,     // Production Vercel URL
+      ].filter(Boolean);
+      
+      // Check if the origin is in the allowed list or ends with .vercel.app
+      const isAllowed = allowedOrigins.includes(origin) || 
+                        origin?.endsWith('.vercel.app') ||
+                        origin?.endsWith('-rajpandey3740-ops.vercel.app');
+      
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        console.warn(`CORS blocked origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  };
+  
+  app.use(cors(corsOptions));
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 

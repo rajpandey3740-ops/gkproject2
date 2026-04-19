@@ -24,12 +24,14 @@ app.get('/api/ping', (_req, res) => {
   res.json({ status: 'pong', timestamp: new Date().toISOString() });
 });
 
-// Connect to database
-connectDatabase().then(() => {
-  Logger.info('✅ Database connection established');
-}).catch((err: unknown) => {
-  Logger.error('❌ Database connection failed:', err);
-});
+// Connect to database (non-blocking - app continues even if DB fails)
+connectDatabase()
+  .then(() => {
+    Logger.info('✅ Database connection established');
+  })
+  .catch((err: unknown) => {
+    Logger.error('❌ Database connection failed, continuing with fallback data:', err);
+  });
 
 // Export for Vercel serverless functions
 export default app;

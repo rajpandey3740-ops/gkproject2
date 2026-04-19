@@ -2,12 +2,19 @@ import mongoose from 'mongoose';
 import { Logger } from '../utils/logger';
 
 export const connectDatabase = async (): Promise<void> => {
-  const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/gkshop';
+  const mongoURI = process.env.MONGODB_URI;
   
-  // Log the connection string (without credentials) for debugging
-  Logger.info(`Attempting to connect to MongoDB: ${mongoURI.replace(/\/\/.*@/, '//****:****@')}`);
+  // If no MongoDB URI is provided, log warning and return (app will use fallback data)
+  if (!mongoURI) {
+    Logger.warn('⚠️  MONGODB_URI not provided - using fallback data mode');
+    Logger.warn('   Set MONGODB_URI environment variable to enable database features');
+    return;
+  }
   
   try {
+    // Log the connection string (without credentials) for debugging
+    Logger.info(`Attempting to connect to MongoDB: ${mongoURI.replace(/\/\/.*@/, '//****:****@')}`);
+    
     // Check if we're using MongoDB Atlas (cloud)
     const isAtlas = mongoURI.includes('mongodb+srv');
     
@@ -42,9 +49,9 @@ export const connectDatabase = async (): Promise<void> => {
       process.exit(0);
     });
   } catch (error) {
-    Logger.error('Failed to connect to MongoDB:');
+    Logger.error('❌ Failed to connect to MongoDB:');
     Logger.error(error instanceof Error ? error.message : String(error));
-    Logger.warn('⚠️ CRITICAL: MongoDB Atlas connection failed - falling back to standalone mode');
-    throw error;
+    Logger.warn('⚠️  App will continue in fallback mode with static data');
+    // Do NOT throw - allow app to continue with fallback data
   }
 };

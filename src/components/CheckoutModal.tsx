@@ -4,7 +4,7 @@ import { CartItem, Address } from '../types';
 import AddressModal from './AddressModal';
 
 // Use relative URLs for Vercel deployment or environment variable for local development
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface CheckoutModalProps {
   cart: CartItem[];

@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Order } from '../types';
 
 // Use relative URLs for Vercel deployment
-const API_BASE_URL = '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const MyOrders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);

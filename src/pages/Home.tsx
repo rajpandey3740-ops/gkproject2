@@ -7,7 +7,7 @@ import CartModal from '../components/CartModal';
 import CheckoutModal from '../components/CheckoutModal';
 
 // Use relative URLs for Vercel deployment or environment variable for local development
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
