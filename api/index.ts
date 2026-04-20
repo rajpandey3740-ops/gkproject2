@@ -19,11 +19,6 @@ try {
 // Create the Express app instance
 const app = createApp();
 
-// Add a simple ping route directly to the app
-app.get('/api/ping', (_req, res) => {
-  res.json({ status: 'pong', timestamp: new Date().toISOString() });
-});
-
 // Connect to database (non-blocking - app continues even if DB fails)
 connectDatabase()
   .then(() => {
@@ -38,7 +33,7 @@ export default app;
 
 // For local development only
 if (process.env.NODE_ENV !== 'production') {
-  const PORT = Number(process.env.PORT) || 3002;
+  const PORT = Number(process.env.PORT) || 3005;
   app.listen(PORT, () => {
     Logger.info(`✅ Local server running on http://localhost:${PORT}`);
   });

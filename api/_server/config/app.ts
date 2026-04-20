@@ -61,6 +61,14 @@ export function createApp(): Application {
     });
   });
 
+  // Ping endpoint
+  apiRouter.get('/ping', (_req: Request, res: Response) => {
+    return res.json({
+      status: 'pong',
+      timestamp: new Date().toISOString()
+    });
+  });
+
   // Diagnostic endpoint
   apiRouter.get('/diag', (_req: Request, res: Response) => {
     return res.json({
