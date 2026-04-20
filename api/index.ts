@@ -28,13 +28,15 @@ connectDatabase()
     Logger.error('❌ Database connection failed, continuing with fallback data:', err);
   });
 
-// Export for Vercel serverless functions
+// Export for Vercel serverless functions (if needed)
 export default app;
 
-// For local development only
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = Number(process.env.PORT) || 3005;
-  app.listen(PORT, () => {
-    Logger.info(`✅ Local server running on http://localhost:${PORT}`);
-  });
-}
+// Start server for both local development and production (Railway)
+const PORT = Number(process.env.PORT) || 3001;
+app.listen(PORT, () => {
+  Logger.info(`✅ Server running on port ${PORT}`);
+  Logger.info(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  if (process.env.NODE_ENV !== 'production') {
+    Logger.info(`🔗 Local: http://localhost:${PORT}`);
+  }
+});

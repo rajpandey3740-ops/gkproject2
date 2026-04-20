@@ -1,17 +1,11 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS",
-    "buildCommand": "npm install && npm run build",
-    "watchPatterns": [
-      "api/**/*.ts",
-      "api/package.json",
-      "api/tsconfig.json"
-    ]
+    "builder": "NIXPACKS"
   },
   "deploy": {
     "startCommand": "npm start",
-    "healthcheckPath": "/api/health",
+    "healthcheckPath": "/health",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }

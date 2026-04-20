@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "tsx index.ts",
     "dev": "tsx index.ts",
     "db:seed": "tsx _server/scripts/seedDatabase.ts"
   },
